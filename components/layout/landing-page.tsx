@@ -24,7 +24,7 @@ export function LandingPage() {
 
   const handleLogin = () => {
     // Facebook Login (Master Token flow). Uses standard Facebook OAuth.
-    window.location.href = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID}&redirect_uri=${process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI}&response_type=code&scope=pages_show_list,pages_messaging,pages_read_engagement,pages_manage_metadata,pages_manage_engagement,instagram_basic,instagram_manage_messages,instagram_manage_comments`
+    window.location.href = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID}&redirect_uri=${process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI}&response_type=code&scope=pages_show_list,pages_messaging,pages_read_engagement,pages_manage_metadata,pages_manage_posts,instagram_basic,instagram_manage_messages,instagram_manage_comments`
   }
 
   const handleTestLogin = () => {
