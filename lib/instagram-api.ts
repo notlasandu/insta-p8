@@ -1,5 +1,5 @@
-const IG_GRAPH = "https://graph.instagram.com/v24.0"
-const FB_GRAPH = "https://graph.facebook.com/v24.0"
+const IG_GRAPH = "https://graph.facebook.com/v21.0"
+const FB_GRAPH = "https://graph.facebook.com/v21.0"
 
 export interface IGButton {
   type: "web_url" | "postback"
