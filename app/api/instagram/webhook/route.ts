@@ -327,7 +327,15 @@ export async function POST(request: NextRequest) {
                     const content = parseContent(match.response_content)
 
                     // Skip nested replies unless user opted in
-                    if (parentId && content.include_replies !== true) continue
+                    // Note: Facebook top-level comments have parent_id === post_id
+                    const isNestedReply = isFbComment 
+                      ? (parentId && parentId !== mediaId) 
+                      : Boolean(parentId)
+
+                    if (isNestedReply && content.include_replies !== true) {
+                      console.log(`[webhook] ⏭️ Skipping nested reply because include_replies is false`)
+                      continue
+                    }
 
                     console.log(`[webhook] ✅ Comment match: "${match.name}"`)
 
