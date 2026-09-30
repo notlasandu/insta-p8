@@ -10,10 +10,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await getSupabaseServerClient()
 
-    // 1. Get Access Token
+    // 1. Get Access Token and IG Business Account ID
     const { data: user } = await supabase
       .from("users")
-      .select("access_token") // Business ID ki zaroorat nahi hai ab
+      .select("access_token, business_account_id")
       .eq("id", userId)
       .single()
 
@@ -21,12 +21,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Instagram not connected" }, { status: 401 })
     }
 
-    // 2. Fetch Media (Smart Method: /me/media)
-    // Ye 'instagram.com' use karega jo aapke token ke saath compatible hai.
-    // Hum '/me' use kar rahe hain taaki ID mismatch ka lafda hi na ho.
-    const url = `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&limit=24&access_token=${user.access_token}`
+    if (!user?.business_account_id) {
+      return NextResponse.json({ error: "No Instagram Business Account linked to this profile" }, { status: 400 })
+    }
 
-    console.log("[v0] Fetching Media from:", url)
+    // 2. Fetch Media (Correct Method: /v20.0/{business_account_id}/media)
+    // The EAA... tokens generated via Facebook Login must be used with the graph.facebook.com API.
+    // graph.instagram.com is for a different API (Basic Display) and will throw "Cannot parse access token".
+    const url = `https://graph.facebook.com/v20.0/${user.business_account_id}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&limit=24&access_token=${user.access_token}`
+
+    console.log("[v0] Fetching Media from:", url.split("&access_token=")[0]) // Hiding token in logs for safety
 
     const res = await fetch(url, { cache: 'no-store' })
     const data = await res.json()
