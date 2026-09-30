@@ -60,6 +60,11 @@ export async function POST(request: NextRequest) {
     // 4. Get Facebook Pages managed by the user to get the Page Access Token
     const pagesRes = await fetch(`https://graph.facebook.com/v20.0/me/accounts?access_token=${userAccessToken}`)
     const pagesData = await pagesRes.json()
+
+    if (!pagesRes.ok) {
+      console.error("[fb-oauth] 🔴 Pages Error:", JSON.stringify(pagesData, null, 2))
+      return NextResponse.json({ error: pagesData.error?.message || "Failed to fetch pages" }, { status: 400 })
+    }
     
     if (!pagesData.data || pagesData.data.length === 0) {
       return NextResponse.json({ error: "No Facebook Pages found for this user." }, { status: 400 })
