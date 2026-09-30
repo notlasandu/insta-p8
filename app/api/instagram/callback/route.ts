@@ -57,18 +57,41 @@ export async function POST(request: NextRequest) {
     const fbUserId = meData.id
     const fbUserName = meData.name || `User_${fbUserId}`
 
-    // 4. Get Facebook Pages managed by the user to get the Page Access Token
-    const pagesRes = await fetch(`https://graph.facebook.com/v20.0/me/accounts?access_token=${userAccessToken}`)
-    const pagesData = await pagesRes.json()
+    // 4. Bypass the buggy /me/accounts endpoint using debug_token
+    // Facebook has a known bug where /me/accounts returns empty for pages managed via Business Portfolio.
+    // Instead, we inspect exactly what page IDs the user selected in the OAuth popup.
+    const debugUrl = `https://graph.facebook.com/v20.0/debug_token?input_token=${userAccessToken}&access_token=${clientId}|${clientSecret}`
+    const debugRes = await fetch(debugUrl)
+    const debugData = await debugRes.json()
 
-    if (!pagesRes.ok) {
-      console.error("[fb-oauth] 🔴 Pages Error:", JSON.stringify(pagesData, null, 2))
-      return NextResponse.json({ error: pagesData.error?.message || "Failed to fetch pages" }, { status: 400 })
+    if (!debugRes.ok || !debugData.data) {
+      console.error("[fb-oauth] 🔴 Debug Token Error:", JSON.stringify(debugData, null, 2))
+      return NextResponse.json({ error: "Failed to verify token permissions" }, { status: 400 })
     }
-    
-    if (!pagesData.data || pagesData.data.length === 0) {
-      return NextResponse.json({ error: "No Facebook Pages found for this user." }, { status: 400 })
+
+    // Find the pages the user explicitly granted access to
+    const granularScopes = debugData.data.granular_scopes || []
+    const pagesShowListScope = granularScopes.find((s: any) => s.scope === "pages_show_list")
+    const pageIds = pagesShowListScope?.target_ids || []
+
+    if (pageIds.length === 0) {
+      return NextResponse.json({ error: "No Facebook Pages selected during authorization." }, { status: 400 })
     }
+
+    // Fetch details for each granted page individually
+    const fetchedPages = []
+    for (const pageId of pageIds) {
+      const pageRes = await fetch(`https://graph.facebook.com/v20.0/${pageId}?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`)
+      if (pageRes.ok) {
+        fetchedPages.push(await pageRes.json())
+      }
+    }
+
+    if (fetchedPages.length === 0) {
+      return NextResponse.json({ error: "Failed to fetch details for the selected Facebook Pages." }, { status: 400 })
+    }
+
+    const pagesData = { data: fetchedPages }
 
     // 5. Save/Update User in Supabase (Initial state before page selection)
     const supabase = await getSupabaseServerClient()
