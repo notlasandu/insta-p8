@@ -23,9 +23,8 @@ export function LandingPage() {
   }, [])
 
   const handleLogin = () => {
-    // Instagram Business Login (Instagram API with Instagram Login). client_id must be the
-    // Instagram app ID from the Instagram product page, not the parent Meta app ID.
-    window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID}&redirect_uri=${process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments`
+    // Facebook Login (Master Token flow). Uses standard Facebook OAuth.
+    window.location.href = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID}&redirect_uri=${process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI}&response_type=code&scope=pages_show_list,pages_messaging,pages_read_engagement,pages_manage_metadata,pages_manage_engagement,instagram_basic,instagram_manage_messages,instagram_manage_comments`
   }
 
   const handleTestLogin = () => {
@@ -112,7 +111,7 @@ export function LandingPage() {
                 onClick={handleLogin}
                 className="group flex items-center gap-2 bg-[#ffe14d] text-black font-mono-ui text-sm font-bold px-7 py-4 rounded-full hover:scale-[1.03] active:scale-[0.98] transition-transform"
               >
-                Connect Instagram
+                Connect Facebook & IG
                 <ArrowUpRight className="w-4 h-4 group-hover:rotate-45 transition-transform" />
               </button>
               {process.env.NODE_ENV === "development" && (

@@ -36,91 +36,77 @@ export async function POST(request: NextRequest) {
       throw new Error("Missing Env Vars: Check INSTAGRAM_APP_ID")
     }
 
-    // 2. Exchange Code for Short Token
-    const tokenParams = new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "authorization_code",
-      redirect_uri: redirectUri,
-      code,
-    })
-
-    const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: tokenParams.toString(),
-    })
-
+    // 2. Exchange Code for User Access Token (Facebook OAuth)
+    const tokenUrl = `https://graph.facebook.com/v20.0/oauth/access_token?client_id=${clientId}&redirect_uri=${redirectUri}&client_secret=${clientSecret}&code=${code}`
+    const tokenRes = await fetch(tokenUrl)
     const tokenData = await tokenRes.json()
+
     if (!tokenRes.ok) {
-      if (tokenData.error_message?.includes("authorization code has been used")) {
-        // Harmless double-fire from React StrictMode or double clicks
+      if (tokenData.error?.message?.includes("used")) {
         return NextResponse.json({ error: "Code already used" }, { status: 400 })
       }
-      console.error("[v0] 🔴 Token Error:", JSON.stringify(tokenData, null, 2))
-      return NextResponse.json({ error: tokenData.error_description || "Token failed" }, { status: 400 })
+      console.error("[fb-oauth] 🔴 Token Error:", JSON.stringify(tokenData, null, 2))
+      return NextResponse.json({ error: tokenData.error?.message || "Token failed" }, { status: 400 })
     }
 
-    const shortToken = tokenData.access_token
-    const loginUserId = tokenData.user_id.toString()
+    const userAccessToken = tokenData.access_token
 
-    // 3. Exchange for Long Token (60 Days)
-    const longLivedUrl = `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${clientSecret}&access_token=${shortToken}`
-    const longRes = await fetch(longLivedUrl)
-    const longData = await longRes.json()
-    const accessToken = longData.access_token || shortToken
-    const expiresIn = longData.expires_in || 5184000
+    // 3. Get Facebook User ID and Name
+    const meRes = await fetch(`https://graph.facebook.com/v20.0/me?fields=id,name&access_token=${userAccessToken}`)
+    const meData = await meRes.json()
+    const fbUserId = meData.id
+    const fbUserName = meData.name || `User_${fbUserId}`
 
-    // 4. Get Username + IG Professional Account ID (webhook-matching ID)
-    // Per Meta docs: /me?fields=user_id returns the IG_ID that matches webhook entry.id
-    // https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/get-started
-    let username = `user_${loginUserId}`
-    let businessAccountId = loginUserId // fallback
-    let profilePic: string | null = null
+    // 4. Get Facebook Pages managed by the user to get the Page Access Token
+    const pagesRes = await fetch(`https://graph.facebook.com/v20.0/me/accounts?access_token=${userAccessToken}`)
+    const pagesData = await pagesRes.json()
+    
+    if (!pagesData.data || pagesData.data.length === 0) {
+      return NextResponse.json({ error: "No Facebook Pages found for this user." }, { status: 400 })
+    }
 
+    // Pick the first page (or you can expand this to let the user select)
+    const page = pagesData.data[0]
+    const pageId = page.id
+    const pageAccessToken = page.access_token
+
+    // 5. Check if an Instagram Business Account is linked to this Facebook Page
+    let igBusinessAccountId = null
     try {
-      const meRes = await fetch(
-        `https://graph.instagram.com/v24.0/me?fields=user_id,username,profile_picture_url&access_token=${accessToken}`
-      )
-      const meData = await meRes.json()
-      console.log("[v0] 📋 /me response:", JSON.stringify(meData))
-
-      if (meData.username) username = meData.username
-      if (meData.profile_picture_url) profilePic = meData.profile_picture_url
-      if (meData.user_id) {
-        businessAccountId = meData.user_id.toString()
-        console.log(`[v0] 🎯 Got IG Professional Account ID (user_id): ${businessAccountId}`)
-      } else {
-        console.warn(`[v0] ⚠️ /me did not return user_id, using loginUserId: ${loginUserId}`)
+      const igRes = await fetch(`https://graph.facebook.com/v20.0/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`)
+      const igData = await igRes.json()
+      if (igData.instagram_business_account?.id) {
+        igBusinessAccountId = igData.instagram_business_account.id
+        console.log(`[fb-oauth] 🎯 Found linked IG Account: ${igBusinessAccountId}`)
       }
     } catch (e) {
-      console.error("[v0] /me request failed:", e)
+      console.error("[fb-oauth] Failed to fetch linked IG account", e)
     }
 
-    // 6. Save/Update User
+    // 6. Save/Update User in Supabase
     const supabase = await getSupabaseServerClient()
 
     const updates: any = {
-      username,
-      access_token: accessToken,
-      token_expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
+      username: fbUserName,
+      access_token: pageAccessToken, // The Master Token!
+      token_expires_at: null, // Page access tokens generated this way are usually long-lived/non-expiring
       updated_at: new Date().toISOString(),
-      business_account_id: businessAccountId,
-      page_id: businessAccountId, // Always keep in sync
+      page_id: pageId,
+      business_account_id: igBusinessAccountId || null,
     }
 
-    console.log(`[v0] 💾 Saving user: ${username} | id=${loginUserId} | biz_id=${businessAccountId}`)
+    console.log(`[fb-oauth] 💾 Saving FB User: ${fbUserName} | fb_id=${fbUserId} | page_id=${pageId} | ig_biz_id=${igBusinessAccountId}`)
 
     const { error: upsertError } = await supabase
       .from("users")
-      .upsert({ id: loginUserId, ...updates }, { onConflict: "id" })
+      .upsert({ id: fbUserId, ...updates }, { onConflict: "id" })
 
     if (upsertError) throw upsertError
 
-    const response = NextResponse.json({ success: true, username, userId: loginUserId, profilePic })
-    response.cookies.set("insta_session", JSON.stringify({ username, userId: loginUserId }), {
+    const response = NextResponse.json({ success: true, username: fbUserName, userId: fbUserId, profilePic: null })
+    response.cookies.set("insta_session", JSON.stringify({ username: fbUserName, userId: fbUserId }), {
       path: "/",
-      maxAge: expiresIn,
+      maxAge: 5184000,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     })
