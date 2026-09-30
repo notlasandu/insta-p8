@@ -413,7 +413,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
 
                                                       {/* Type Overlay */}
                                                       <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-black/70 text-[9px] font-mono-ui text-white uppercase tracking-wider border border-white/10">
-                                                        {reel.media_type === "STORY" ? "Story" : reel.media_type === "VIDEO" ? "Reel" : "Post"}
+                                                        {reel.media_type === "STORY" ? "IG Story" : reel.media_type === "VIDEO" ? "IG Reel" : reel.media_type === "FB_POST" ? "FB Post" : "IG Post"}
                                                       </span>
 
                                                       {/* Selected Check overlay */}
