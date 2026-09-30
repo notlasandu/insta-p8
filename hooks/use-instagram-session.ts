@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+
+const consumedCodes = new Set<string>()
 
 export function useInstagramSession() {
     const [username, setUsername] = useState<string | null>(null)
@@ -19,6 +21,25 @@ export function useInstagramSession() {
         const handleSession = async () => {
             // CASE A: New Login from Facebook
             if (code) {
+                if (consumedCodes.has(code)) {
+                    // We already processed this code (StrictMode), so just load from local storage
+                    const savedId = localStorage.getItem("ig_user_id")
+                    const savedName = localStorage.getItem("ig_username")
+                    if (savedId && savedName) {
+                        setUserId(savedId)
+                        setUsername(savedName)
+                        setProfilePic(localStorage.getItem("ig_profile_pic"))
+                        
+                        // We also need pendingPages if we haven't selected one. 
+                        // Let's grab it from sessionStorage if we saved it there.
+                        const savedPages = sessionStorage.getItem("pending_pages")
+                        if (savedPages) setPendingPages(JSON.parse(savedPages))
+                    }
+                    setIsLoading(false)
+                    return
+                }
+                consumedCodes.add(code)
+
                 try {
                     const res = await fetch("/api/instagram/callback", {
                         method: "POST",
@@ -35,11 +56,12 @@ export function useInstagramSession() {
                         setUsername(data.username)
                         setProfilePic(data.profilePic || null)
                         
+                        // Clear the code from the URL immediately so a refresh doesn't replay it
+                        router.replace("/dashboard")
+                        
                         if (data.pages && data.pages.length > 0) {
                             setPendingPages(data.pages)
-                        } else {
-                            // No pages returned? Just clear code from URL
-                            router.replace("/dashboard")
+                            sessionStorage.setItem("pending_pages", JSON.stringify(data.pages))
                         }
                     }
                 } catch (err) {
@@ -74,6 +96,7 @@ export function useInstagramSession() {
             const data = await res.json()
             if (data.success) {
                 setPendingPages(null)
+                sessionStorage.removeItem("pending_pages")
                 router.replace("/dashboard")
             } else {
                 console.error("Failed to save page:", data.error)
