@@ -96,12 +96,13 @@ async function sendAutomationResponse(
   token: string,
   recipient: { id?: string; comment_id?: string },
   content: any,
-  opts: { skipTyping?: boolean } = {},
+  opts: { skipTyping?: boolean; platform?: 'ig' | 'fb' } = {},
 ) {
+  const platform = opts.platform || 'ig'
   const delaySeconds = Number(content.delay_seconds) || 0
   const useTyping = content.typing_indicator === true && recipient.id && !opts.skipTyping
 
-  if (useTyping) await sendSenderAction(token, recipient.id!, "typing_on")
+  if (useTyping) await sendSenderAction(token, recipient.id!, "typing_on", platform)
   if (delaySeconds > 0) await sleep(delaySeconds * 1000)
 
   const quickReplies = Array.isArray(content.quick_replies)
@@ -112,19 +113,19 @@ async function sendAutomationResponse(
 
   let result
   if (content.media?.url) {
-    result = await sendMediaDM(token, recipient, content.media.type || "image", content.media.url)
+    result = await sendMediaDM(token, recipient, content.media.type || "image", content.media.url, platform)
     if (result.ok && content.message) {
-      result = await sendTextDM(token, recipient, content.message, quickReplies)
+      result = await sendTextDM(token, recipient, content.message, quickReplies, platform)
     }
   } else if (content.card) {
-    result = await sendCardDM(token, recipient, content.card)
+    result = await sendCardDM(token, recipient, content.card, platform)
   } else if (content.message) {
-    result = await sendTextDM(token, recipient, content.message, quickReplies)
+    result = await sendTextDM(token, recipient, content.message, quickReplies, platform)
   } else {
     result = { ok: false, error: "empty content" }
   }
 
-  if (useTyping) await sendSenderAction(token, recipient.id!, "typing_off")
+  if (useTyping) await sendSenderAction(token, recipient.id!, "typing_off", platform)
   return result
 }
 
@@ -144,7 +145,8 @@ function responsePreviewText(content: any): string {
 //   { follows: null, error: 'auth' } → auth/permission failure (401, 403) — fail CLOSED
 //   { follows: null, error: 'transient' } → transient failure (5xx, timeout) — fail OPEN
 // ============================================================
-async function verifyFollowStatus(igScopedId: string, pageAccessToken: string): Promise<{ follows: boolean | null; error?: 'auth' | 'transient' }> {
+async function verifyFollowStatus(igScopedId: string, pageAccessToken: string, platform: 'ig' | 'fb' = 'ig'): Promise<{ follows: boolean | null; error?: 'auth' | 'transient' }> {
+  if (platform === 'fb') return { follows: true, error: undefined }
   try {
     const url = `https://graph.instagram.com/v21.0/${igScopedId}?fields=is_user_follow_business&access_token=${pageAccessToken}`
     // 5s timeout -- Graph API is fast, anything longer means trouble
@@ -280,15 +282,19 @@ export async function POST(request: NextRequest) {
       // ============================================================
       if (entry.changes) {
         for (const change of entry.changes) {
-          if (change.field !== "comments" || !change.value?.text) continue
+          const isIgComment = change.field === "comments" && change.value?.text
+          const isFbComment = change.field === "feed" && change.value?.item === "comment" && change.value?.verb === "add" && change.value?.message
+          
+          if (!isIgComment && !isFbComment) continue
 
-          const commentId = change.value.id
-          const commentText = change.value.text.toLowerCase().trim()
-          const senderId = change.value.from.id
-          const mediaId = change.value.media.id
+          const platform = isFbComment ? "fb" : "ig"
+          const commentId = isIgComment ? change.value.id : change.value.comment_id
+          const commentText = (isIgComment ? change.value.text : change.value.message).toLowerCase().trim()
+          const senderId = change.value.from?.id
+          const mediaId = isIgComment ? change.value.media?.id : change.value.post_id
           const parentId = change.value.parent_id || null
 
-          if (senderId === webhookId || senderId === user.business_account_id || senderId === user.page_id) continue
+          if (!senderId || senderId === webhookId || senderId === user.business_account_id || senderId === user.page_id) continue
 
           const commentAutomations = automations.filter((a: any) => a.trigger_source === "comment")
 
@@ -337,77 +343,79 @@ export async function POST(request: NextRequest) {
                     // The gate card is delivered as a *private reply* to the comment. recipient.id
                     // alone won't open a DM with someone who has never messaged the account; private
                     // replies to a comment need comment_id.
-                    if (content.check_follow === true) {
-                      const followResult = await verifyFollowStatus(senderId, user.access_token)
+                      if (content.check_follow === true) {
+                        const followResult = await verifyFollowStatus(senderId, user.access_token, platform)
 
-                      if (followResult.follows === true) {
-                        console.log(`[webhook] ✅ Comment follower gate: @${senderId} follows @${user.username} — sending content`)
-                        if (replyMode !== "dm_only") {
-                          await replyToComment(user.access_token, commentId, getPublicReply())
-                        }
-                        if (replyMode !== "public_only") {
-                          await sendAutomationResponse(
-                            user.access_token,
-                            { comment_id: commentId },
-                            content,
-                            { skipTyping: true },
-                          )
-                        }
-                      } else if (followResult.follows === false) {
-                        console.log(`[webhook] 🔒 Comment follower gate: @${senderId} doesn't follow @${user.username}`)
-                        if (replyMode !== "dm_only") {
-                          await replyToComment(user.access_token, commentId, getPublicReply())
-                        }
-                        if (replyMode !== "public_only") {
-                          await sendCardDM(
-                            user.access_token,
-                            { comment_id: commentId },
-                            buildFollowGateCard({ username: user.username, ruleId: match.id }),
-                          )
-                        }
-                      } else {
-                        // null → unverifiable. Distinguish auth vs transient.
-                        const isAuthError = followResult.error === 'auth'
-                        if (isAuthError) {
-                          // Auth/permission failure — fail CLOSED: send gate card
-                          console.warn(`[webhook] ⚠️ Comment follower gate auth failure for @${senderId}; sending gate`)
+                        if (followResult.follows === true) {
+                          console.log(`[webhook] ✅ Comment follower gate: @${senderId} follows @${user.username} — sending content`)
                           if (replyMode !== "dm_only") {
-                            await replyToComment(user.access_token, commentId, getPublicReply())
-                          }
-                          if (replyMode !== "public_only") {
-                            await sendCardDM(
-                              user.access_token,
-                              { comment_id: commentId },
-                              buildFollowGateCard({ username: user.username, ruleId: match.id }),
-                            )
-                          }
-                        } else {
-                          // Transient failure — fail OPEN: deliver content (with public reply if allowed)
-                          console.warn(`[webhook] ⚠️ Comment follower gate transient failure for @${senderId}; failing open`)
-                          if (replyMode !== "dm_only") {
-                            await replyToComment(user.access_token, commentId, getPublicReply())
+                            await replyToComment(user.access_token, commentId, getPublicReply(), platform)
                           }
                           if (replyMode !== "public_only") {
                             await sendAutomationResponse(
                               user.access_token,
                               { comment_id: commentId },
                               content,
-                              { skipTyping: true },
+                              { skipTyping: true, platform },
                             )
                           }
-                        }
+                        } else if (followResult.follows === false) {
+                          console.log(`[webhook] 🔒 Comment follower gate: @${senderId} doesn't follow @${user.username}`)
+                          if (replyMode !== "dm_only") {
+                            await replyToComment(user.access_token, commentId, getPublicReply(), platform)
+                          }
+                          if (replyMode !== "public_only") {
+                            await sendCardDM(
+                              user.access_token,
+                              { comment_id: commentId },
+                              buildFollowGateCard({ username: user.username, ruleId: match.id }),
+                              platform
+                            )
+                          }
+                        } else {
+                          // null → unverifiable. Distinguish auth vs transient.
+                          const isAuthError = followResult.error === 'auth'
+                          if (isAuthError) {
+                            // Auth/permission failure — fail CLOSED: send gate card
+                            console.warn(`[webhook] ⚠️ Comment follower gate auth failure for @${senderId}; sending gate`)
+                            if (replyMode !== "dm_only") {
+                              await replyToComment(user.access_token, commentId, getPublicReply(), platform)
+                            }
+                            if (replyMode !== "public_only") {
+                              await sendCardDM(
+                                user.access_token,
+                                { comment_id: commentId },
+                                buildFollowGateCard({ username: user.username, ruleId: match.id }),
+                                platform
+                              )
+                            }
+                          } else {
+                            // Transient failure — fail OPEN: deliver content (with public reply if allowed)
+                            console.warn(`[webhook] ⚠️ Comment follower gate transient failure for @${senderId}; failing open`)
+                            if (replyMode !== "dm_only") {
+                              await replyToComment(user.access_token, commentId, getPublicReply(), platform)
+                            }
+                            if (replyMode !== "public_only") {
+                              await sendAutomationResponse(
+                                user.access_token,
+                                { comment_id: commentId },
+                                content,
+                                { skipTyping: true, platform },
+                              )
+                            }
+                          }
                       }
                     } else {
                       // No follower check required — send normally
                       if (replyMode !== "dm_only") {
-                        await replyToComment(user.access_token, commentId, getPublicReply())
+                        await replyToComment(user.access_token, commentId, getPublicReply(), platform)
                       }
                       if (replyMode !== "public_only") {
                         await sendAutomationResponse(
                           user.access_token,
                           { comment_id: commentId },
                           content,
-                          { skipTyping: true },
+                          { skipTyping: true, platform },
                         )
                       }
                     }

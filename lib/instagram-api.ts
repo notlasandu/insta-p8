@@ -1,4 +1,5 @@
-const GRAPH = "https://graph.instagram.com/v24.0"
+const IG_GRAPH = "https://graph.instagram.com/v24.0"
+const FB_GRAPH = "https://graph.facebook.com/v24.0"
 
 export interface IGButton {
   type: "web_url" | "postback"
@@ -25,9 +26,10 @@ export interface SendResult {
   error?: any
 }
 
-async function post(path: string, token: string, body: any): Promise<SendResult> {
+async function post(path: string, token: string, body: any, platform: 'ig' | 'fb' = 'ig'): Promise<SendResult> {
+  const graphUrl = platform === 'fb' ? FB_GRAPH : IG_GRAPH;
   try {
-    const res = await fetch(`${GRAPH}/${path}?access_token=${encodeURIComponent(token)}`, {
+    const res = await fetch(`${graphUrl}/${path}?access_token=${encodeURIComponent(token)}`, {
       method: "POST",
       signal: AbortSignal.timeout(15000),
       headers: { "Content-Type": "application/json" },
@@ -35,12 +37,12 @@ async function post(path: string, token: string, body: any): Promise<SendResult>
     })
     const json = await res.json()
     if (!res.ok || json.error) {
-      console.error(`[ig-api] ${path} failed:`, JSON.stringify(json.error))
+      console.error(`[api] ${path} failed:`, JSON.stringify(json.error))
       return { ok: false, error: json.error || `HTTP ${res.status}` }
     }
     return { ok: true, id: json.id || json.message_id }
   } catch (e) {
-    console.error(`[ig-api] ${path} network error:`, e)
+    console.error(`[api] ${path} network error:`, e)
     return { ok: false, error: e }
   }
 }
@@ -92,6 +94,7 @@ export async function sendTextDM(
   recipient: { id?: string; comment_id?: string },
   text: string,
   quickReplies?: QuickReply[],
+  platform: 'ig' | 'fb' = 'ig'
 ): Promise<SendResult> {
   const message: any = { text }
   if (quickReplies?.length) {
@@ -101,15 +104,16 @@ export async function sendTextDM(
       payload: q.payload,
     }))
   }
-  return post("me/messages", token, { recipient, message })
+  return post("me/messages", token, { recipient, message }, platform)
 }
 
 export async function sendCardDM(
   token: string,
   recipient: { id?: string; comment_id?: string },
   card: IGCard,
+  platform: 'ig' | 'fb' = 'ig'
 ): Promise<SendResult> {
-  return post("me/messages", token, { recipient, message: buildCardAttachment(card) })
+  return post("me/messages", token, { recipient, message: buildCardAttachment(card) }, platform)
 }
 
 export async function sendMediaDM(
@@ -117,19 +121,21 @@ export async function sendMediaDM(
   recipient: { id?: string; comment_id?: string },
   mediaType: "image" | "video" | "audio",
   url: string,
+  platform: 'ig' | 'fb' = 'ig'
 ): Promise<SendResult> {
   return post("me/messages", token, {
     recipient,
     message: { attachment: { type: mediaType, payload: { url } } },
-  })
+  }, platform)
 }
 
 export async function sendSenderAction(
   token: string,
   recipientId: string,
   action: "typing_on" | "typing_off" | "mark_seen",
+  platform: 'ig' | 'fb' = 'ig'
 ): Promise<SendResult> {
-  return post("me/messages", token, { recipient: { id: recipientId }, sender_action: action })
+  return post("me/messages", token, { recipient: { id: recipientId }, sender_action: action }, platform)
 }
 
 export async function sendMessageReaction(
@@ -137,32 +143,39 @@ export async function sendMessageReaction(
   recipientId: string,
   messageId: string,
   reaction = "love",
+  platform: 'ig' | 'fb' = 'ig'
 ): Promise<SendResult> {
   return post("me/messages", token, {
     recipient: { id: recipientId },
     sender_action: "react",
     payload: { message_id: messageId, reaction },
-  })
+  }, platform)
 }
 
-export async function replyToComment(token: string, commentId: string, message: string): Promise<SendResult> {
-  return post(`${commentId}/replies`, token, { message })
+export async function replyToComment(token: string, commentId: string, message: string, platform: 'ig' | 'fb' = 'ig'): Promise<SendResult> {
+  const endpoint = platform === 'fb' ? `${commentId}/comments` : `${commentId}/replies`;
+  return post(endpoint, token, { message }, platform)
 }
 
-export async function fetchProfile(token: string, igUserId: string): Promise<{ username?: string; name?: string } | null> {
+export async function fetchProfile(token: string, userId: string, platform: 'ig' | 'fb' = 'ig'): Promise<{ username?: string; name?: string } | null> {
+  const graphUrl = platform === 'fb' ? FB_GRAPH : IG_GRAPH;
   try {
-    const res = await fetch(`${GRAPH}/${igUserId}?fields=username,name&access_token=${encodeURIComponent(token)}`, { signal: AbortSignal.timeout(5000) })
+    const res = await fetch(`${graphUrl}/${userId}?fields=username,name,first_name,last_name&access_token=${encodeURIComponent(token)}`, { signal: AbortSignal.timeout(5000) })
     const json = await res.json()
     if (!res.ok || json.error) return null
+    if (platform === 'fb' && !json.username && json.first_name) {
+      json.username = `${json.first_name} ${json.last_name || ''}`.trim()
+    }
     return json
   } catch {
     return null
   }
 }
 
-export async function verifyIdOwnership(token: string, id: string): Promise<boolean> {
+export async function verifyIdOwnership(token: string, id: string, platform: 'ig' | 'fb' = 'ig'): Promise<boolean> {
+  const graphUrl = platform === 'fb' ? FB_GRAPH : IG_GRAPH;
   try {
-    const res = await fetch(`${GRAPH}/${id}?fields=id&access_token=${encodeURIComponent(token)}`, { signal: AbortSignal.timeout(5000) })
+    const res = await fetch(`${graphUrl}/${id}?fields=id&access_token=${encodeURIComponent(token)}`, { signal: AbortSignal.timeout(5000) })
     return res.ok
   } catch {
     return false
