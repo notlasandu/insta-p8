@@ -182,7 +182,11 @@ async function verifyFollowStatus(igScopedId: string, pageAccessToken: string, p
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
+    console.log(`\n\n[webhook] --- INCOMING WEBHOOK POST ---`)
+    console.log(`[webhook] Raw Body: ${rawBody}`)
+    
     const signature = request.headers.get("x-hub-signature-256")
+    console.log(`[webhook] Signature Header: ${signature}`)
     if (!isValidSignature(rawBody, signature)) {
       // Hash prefixes are safe to log and let us tell a wrong secret from a mutated body.
       const computed = APP_SECRETS.map(
