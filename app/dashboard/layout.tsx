@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
-    const { username, profilePic, logout, isLoading } = useInstagramSession()
+    const { username, profilePic, logout, isLoading, pendingPages, selectPage } = useInstagramSession()
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
     useEffect(() => {
@@ -60,6 +60,31 @@ export default function DashboardLayout({
                     {children}
                 </main>
             </div>
+            
+            {/* Page Selection Modal */}
+            {pendingPages && pendingPages.length > 0 && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-background border border-border w-full max-w-md rounded-xl p-6 shadow-2xl">
+                        <h2 className="text-xl font-bold mb-2">Select a Facebook Page</h2>
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Choose the Facebook Page connected to the Instagram Professional account you want to automate.
+                        </p>
+                        
+                        <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                            {pendingPages.map((page: any) => (
+                                <button
+                                    key={page.id}
+                                    onClick={() => selectPage(page.id, page.access_token)}
+                                    className="w-full flex flex-col text-left p-4 rounded-lg border border-border bg-card hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                    <span className="font-semibold text-base">{page.name}</span>
+                                    <span className="text-xs text-muted-foreground">{page.category} • ID: {page.id}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

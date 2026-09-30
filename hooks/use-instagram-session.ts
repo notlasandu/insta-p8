@@ -8,6 +8,7 @@ export function useInstagramSession() {
     const [userId, setUserId] = useState<string | null>(null)
     const [profilePic, setProfilePic] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [pendingPages, setPendingPages] = useState<any[] | null>(null)
 
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -16,7 +17,7 @@ export function useInstagramSession() {
         const code = searchParams.get("code")
 
         const handleSession = async () => {
-            // CASE A: New Login from Instagram
+            // CASE A: New Login from Facebook
             if (code) {
                 try {
                     const res = await fetch("/api/instagram/callback", {
@@ -33,8 +34,13 @@ export function useInstagramSession() {
                         setUserId(data.userId)
                         setUsername(data.username)
                         setProfilePic(data.profilePic || null)
-                        // Remove code from URL
-                        router.replace("/dashboard")
+                        
+                        if (data.pages && data.pages.length > 0) {
+                            setPendingPages(data.pages)
+                        } else {
+                            // No pages returned? Just clear code from URL
+                            router.replace("/dashboard")
+                        }
                     }
                 } catch (err) {
                     console.error("Login failed:", err)
@@ -57,6 +63,28 @@ export function useInstagramSession() {
         handleSession()
     }, [searchParams, router])
 
+    const selectPage = async (pageId: string, pageAccessToken: string) => {
+        setIsLoading(true)
+        try {
+            const res = await fetch("/api/instagram/save-page", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pageId, pageAccessToken }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                setPendingPages(null)
+                router.replace("/dashboard")
+            } else {
+                console.error("Failed to save page:", data.error)
+            }
+        } catch (err) {
+            console.error("Error saving page:", err)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     const logout = () => {
         localStorage.removeItem("ig_user_id")
         localStorage.removeItem("ig_username")
@@ -68,5 +96,5 @@ export function useInstagramSession() {
         router.push("/")
     }
 
-    return { userId, username, profilePic, isLoading, logout }
+    return { userId, username, profilePic, isLoading, logout, pendingPages, selectPage }
 }

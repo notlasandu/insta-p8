@@ -65,37 +65,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No Facebook Pages found for this user." }, { status: 400 })
     }
 
-    // Pick the first page (or you can expand this to let the user select)
-    const page = pagesData.data[0]
-    const pageId = page.id
-    const pageAccessToken = page.access_token
-
-    // 5. Check if an Instagram Business Account is linked to this Facebook Page
-    let igBusinessAccountId = null
-    try {
-      const igRes = await fetch(`https://graph.facebook.com/v20.0/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`)
-      const igData = await igRes.json()
-      if (igData.instagram_business_account?.id) {
-        igBusinessAccountId = igData.instagram_business_account.id
-        console.log(`[fb-oauth] 🎯 Found linked IG Account: ${igBusinessAccountId}`)
-      }
-    } catch (e) {
-      console.error("[fb-oauth] Failed to fetch linked IG account", e)
-    }
-
-    // 6. Save/Update User in Supabase
+    // 5. Save/Update User in Supabase (Initial state before page selection)
     const supabase = await getSupabaseServerClient()
 
     const updates: any = {
       username: fbUserName,
-      access_token: pageAccessToken, // The Master Token!
-      token_expires_at: null, // Page access tokens generated this way are usually long-lived/non-expiring
+      access_token: userAccessToken, // We store the user token temporarily
+      token_expires_at: null,
       updated_at: new Date().toISOString(),
-      page_id: pageId,
-      business_account_id: igBusinessAccountId || null,
+      page_id: null,
+      business_account_id: null,
     }
 
-    console.log(`[fb-oauth] 💾 Saving FB User: ${fbUserName} | fb_id=${fbUserId} | page_id=${pageId} | ig_biz_id=${igBusinessAccountId}`)
+    console.log(`[fb-oauth] 💾 Saving FB User initially: ${fbUserName} | fb_id=${fbUserId}`)
 
     const { error: upsertError } = await supabase
       .from("users")
@@ -103,7 +85,13 @@ export async function POST(request: NextRequest) {
 
     if (upsertError) throw upsertError
 
-    const response = NextResponse.json({ success: true, username: fbUserName, userId: fbUserId, profilePic: null })
+    const response = NextResponse.json({ 
+      success: true, 
+      username: fbUserName, 
+      userId: fbUserId, 
+      profilePic: null,
+      pages: pagesData.data 
+    })
     response.cookies.set("insta_session", JSON.stringify({ username: fbUserName, userId: fbUserId }), {
       path: "/",
       maxAge: 5184000,
