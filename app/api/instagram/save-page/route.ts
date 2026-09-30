@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the user ID from the session cookie
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const sessionCookie = cookieStore.get("insta_session")
     
     if (!sessionCookie) {
