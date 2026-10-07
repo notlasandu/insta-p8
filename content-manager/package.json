@@ -22,8 +22,8 @@
 		"vite": "^8.0.16"
 	},
 	"dependencies": {
+		"@supabase/supabase-js": "^2.117.2",
 		"html-to-image": "^1.11.13",
 		"svelte-dnd-action": "^0.9.77"
 	}
 }
-

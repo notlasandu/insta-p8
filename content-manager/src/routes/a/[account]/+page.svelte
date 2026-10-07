@@ -6,11 +6,9 @@
   import AccountInsights from "$lib/components/analytics/AccountInsights.svelte";
   import Suggestions from "$lib/components/analytics/Suggestions.svelte";
   import TopicBullseye from "$lib/components/analytics/TopicBullseye.svelte";
-  import ContentPipeline from "$lib/components/analytics/ContentPipeline.svelte";
   import ContentGrid from "$lib/components/analytics/ContentGrid.svelte";
   import CalendarSidebar from "$lib/components/analytics/CalendarSidebar.svelte";
   import HistoricalChart from "$lib/components/analytics/HistoricalChart.svelte";
-  import ThemeToggle from "$lib/components/ThemeToggle.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -22,14 +20,13 @@
   let posts = $derived(postsData as ContentItem[]);
   let isCalendarOpen = $state(false);
 
-  // Safely extract properties with fallbacks for placeholder state
   let isDataValid = $derived(rawData && !Array.isArray(rawData) && Object.keys(rawData).length > 0);
   
   let profileInfo = $derived(isDataValid && rawData.profile_info ? rawData.profile_info : {
-    name: 'Placeholder Profile',
-    profile_picture_url: 'https://ui-avatars.com/api/?name=PP&background=random',
-    biography: 'Analytics data is currently empty or unavailable. Please fetch the data to see real insights.',
-    username: 'placeholder_user',
+    name: 'copiumbuilder',
+    profile_picture_url: 'https://ui-avatars.com/api/?name=CB&background=random',
+    biography: '',
+    username: 'copiumbuilder',
     media_count: 0,
     followers_count: 0,
     id: 'unknown',
@@ -37,18 +34,26 @@
     follows_count: 0
   });
 
+  let facebookProfileInfo = $derived(isDataValid && rawData.facebook_profile_info ? rawData.facebook_profile_info : {
+    name: 'Facebook Page',
+    followers_count: 0
+  });
+
   let accountInsights = $derived(isDataValid && rawData.account_insights ? rawData.account_insights : []);
+  let facebookAccountInsights = $derived(isDataValid && rawData.facebook_account_insights ? rawData.facebook_account_insights : []);
   let historicalStats = $derived(isDataValid && rawData.historical_stats ? rawData.historical_stats : []);
   let mediaPosts = $derived(isDataValid && rawData.media_posts ? rawData.media_posts : []);
+  let facebookPosts = $derived(isDataValid && rawData.facebook_posts ? rawData.facebook_posts : []);
   let mediaInsights = $derived(isDataValid && rawData.media_insights ? rawData.media_insights : {});
+  let latestStats = $derived(historicalStats.length > 0 ? historicalStats[historicalStats.length - 1] : undefined);
   
   let safeBullseyeData = $derived(Object.keys(bullseyeData).length > 0 && bullseyeData.rings ? bullseyeData : {
     rings: [
-      { ring: 1, audience: "Placeholder Audience 1", post_ids: [] },
-      { ring: 2, audience: "Placeholder Audience 2", post_ids: [] },
-      { ring: 3, audience: "Placeholder Audience 3", post_ids: [] },
-      { ring: 4, audience: "Placeholder Audience 4", post_ids: [] },
-      { ring: 5, audience: "Placeholder Audience 5", post_ids: [] }
+      { ring: 1, audience: "Audience 1", post_ids: [] },
+      { ring: 2, audience: "Audience 2", post_ids: [] },
+      { ring: 3, audience: "Audience 3", post_ids: [] },
+      { ring: 4, audience: "Audience 4", post_ids: [] },
+      { ring: 5, audience: "Audience 5", post_ids: [] }
     ]
   });
 </script>
@@ -59,11 +64,10 @@
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-8">
-        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">BerlView</h1>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{profileInfo.name || 'Content Studio'}</h1>
       </div>
 
       <div class="flex items-center gap-2">
-        <ThemeToggle />
         <button 
           title="Content Calendar"
           class="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors flex items-center gap-2"
@@ -87,7 +91,6 @@
           {/if}
           <a href="#suggestions" class="block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg transition-colors">Suggestions</a>
           <a href="#bullseye" class="block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg transition-colors">Topic Bullseye</a>
-          <a href="#pipeline" class="block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg transition-colors">Content Pipeline</a>
           <a href="#recent" class="block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg transition-colors">Recent Posts</a>
         </nav>
       </div>
@@ -95,11 +98,19 @@
 
     <main class="flex-1 min-w-0">
       <div id="profile" class="scroll-mt-24">
-        <ProfileHero {profileInfo} />
+        <ProfileHero 
+          igProfile={profileInfo} 
+          fbProfile={facebookProfileInfo} 
+          fbPostsCount={facebookPosts.length} 
+        />
       </div>
       
       <div id="insights" class="scroll-mt-24">
-        <AccountInsights insights={accountInsights} />
+        <AccountInsights 
+          igProfile={profileInfo} 
+          fbProfile={facebookProfileInfo} 
+          todayStats={latestStats} 
+        />
       </div>
 
       {#if historicalStats.length > 0}
@@ -115,13 +126,9 @@
       <div class="scroll-mt-24">
         <TopicBullseye {mediaPosts} bullseyeData={safeBullseyeData} />
       </div>
-
-      <div id="pipeline" class="scroll-mt-24">
-        <ContentPipeline {posts} {mediaPosts} />
-      </div>
       
       <div id="recent" class="scroll-mt-24">
-        <ContentGrid posts={mediaPosts} {mediaInsights} {postAnalysisData} />
+        <ContentGrid posts={mediaPosts} {facebookPosts} {mediaInsights} {postAnalysisData} />
       </div>
     </main>
   </div>

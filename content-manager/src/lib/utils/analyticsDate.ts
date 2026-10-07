@@ -1,4 +1,4 @@
-import type { HistoricalStatItem, ChartMetric, ChartDayPoint } from "$lib/types/analytics";
+import type { HistoricalStatItem, ChartMetric, ChartDayPoint, PlatformFilter } from "$lib/types/analytics";
 
 export function parseLocalDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split('-').map(Number);
@@ -26,7 +26,8 @@ export function computeTotalSections(data: HistoricalStatItem[], pageSize = 14):
 export function get14DayPoints(
   data: HistoricalStatItem[],
   sectionOffset: number,
-  activeMetric: ChartMetric
+  activeMetric: ChartMetric,
+  platform: PlatformFilter = 'combined'
 ): ChartDayPoint[] {
   const anchor = data && data.length > 0 ? parseLocalDate(data[data.length - 1].date) : new Date();
   const dataMap = new Map<string, HistoricalStatItem>();
@@ -45,10 +46,22 @@ export function get14DayPoints(
     current.setDate(windowEnd.getDate() - i);
     const dateStr = formatLocalDate(current);
     const item = dataMap.get(dateStr);
+    let val: number | null = null;
+    if (item) {
+      if (platform === 'instagram' && item.instagram) {
+        val = item.instagram[activeMetric] ?? null;
+      } else if (platform === 'facebook' && item.facebook) {
+        val = item.facebook[activeMetric] ?? null;
+      } else if (platform === 'combined' && item.combined) {
+        val = item.combined[activeMetric] ?? null;
+      } else {
+        val = item[activeMetric] ?? null;
+      }
+    }
     points.push({
       date: dateStr,
       hasData: Boolean(item),
-      value: item ? item[activeMetric] : null,
+      value: val,
       rawItem: item,
     });
   }

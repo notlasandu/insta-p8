@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { persistDetails } from "$lib/utils/persistDetails";
+
   let { posts } = $props<{
     posts: any[];
   }>();
@@ -29,7 +31,7 @@
   }
 </script>
 
-<details open class="mb-12 group [&::-webkit-details-marker]:hidden" id="suggestions">
+<details open use:persistDetails={'suggestions'} class="mb-12 group [&::-webkit-details-marker]:hidden" id="suggestions">
   <summary class="cursor-pointer select-none flex items-center justify-between mb-6 outline-none">
     <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
       <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>

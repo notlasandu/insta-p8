@@ -7,13 +7,24 @@
 		%sveltekit.head%
 		<script>
 			try {
-				const theme = localStorage.getItem('theme');
-				const supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				if (theme === 'dark' || (!theme && supportDark)) {
-					document.documentElement.classList.add('dark');
+				const params = new URLSearchParams(window.location.search);
+				const urlTheme = params.get('theme');
+				if (urlTheme === 'dark' || urlTheme === 'light') {
+					document.documentElement.classList.toggle('dark', urlTheme === 'dark');
+					localStorage.setItem('theme', urlTheme);
 				} else {
-					document.documentElement.classList.remove('dark');
+					const theme = localStorage.getItem('theme');
+					const supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+					document.documentElement.classList.toggle('dark', theme === 'dark' || (!theme && supportDark));
 				}
+
+				window.addEventListener('message', function (event) {
+					if (event.data && event.data.type === 'THEME_CHANGE') {
+						const isDark = event.data.theme === 'dark';
+						document.documentElement.classList.toggle('dark', isDark);
+						try { localStorage.setItem('theme', event.data.theme); } catch (_) {}
+					}
+				});
 			} catch (_) {}
 		</script>
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />

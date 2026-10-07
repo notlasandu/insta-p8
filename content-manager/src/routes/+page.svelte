@@ -1,5 +1,4 @@
 <script lang="ts">
-  import ThemeToggle from "$lib/components/ThemeToggle.svelte";
   import type { PageData } from './$types';
   import { resolve } from '$app/paths';
 
@@ -12,10 +11,6 @@
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-8">
         <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Accounts Hub</h1>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <ThemeToggle />
       </div>
     </div>
   </header>

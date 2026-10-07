@@ -192,6 +192,9 @@ importers:
 
   content-manager:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.117.2
+        version: 2.117.2
       html-to-image:
         specifier: ^1.11.13
         version: 1.11.13

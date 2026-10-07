@@ -4,9 +4,11 @@
   let {
     points,
     metricLabel,
+    strokeColor = '#10b981',
   }: {
     points: ChartDayPoint[];
     metricLabel: string;
+    strokeColor?: string;
   } = $props();
 
   let hoveredIndex = $state<number | null>(null);
@@ -74,7 +76,7 @@
     <text x="{paddingX - 10}" y="{height - paddingY + 4}" text-anchor="end" class="text-[10px] fill-slate-400 font-mono">{minVal.toLocaleString()}</text>
 
     {#each pathSegments as segment (segment)}
-      <path d={segment} fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      <path d={segment} fill="none" stroke={strokeColor} stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
     {/each}
 
     {#each coords as p, i (p.date)}
@@ -82,7 +84,7 @@
       {#if p.hasData && p.value !== null}
         <g class="cursor-pointer" onmouseenter={() => hoveredIndex = i} onmouseleave={() => hoveredIndex = null} role="graphics-symbol">
           <circle cx="{p.x}" cy="{p.y}" r="16" fill="transparent" />
-          <circle cx="{p.x}" cy="{p.y}" r="{hoveredIndex === i ? 6 : 4.5}" class="fill-white dark:fill-slate-900 stroke-emerald-500 stroke-[2.5px] transition-all {hoveredIndex === i ? 'fill-emerald-100 dark:fill-emerald-900' : ''}" />
+          <circle cx="{p.x}" cy="{p.y}" r="{hoveredIndex === i ? 6 : 4.5}" class="fill-white dark:fill-slate-900 stroke-[2.5px] transition-all" style="stroke: {strokeColor}" />
         </g>
       {/if}
 

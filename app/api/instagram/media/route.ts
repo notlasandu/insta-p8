@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
     const results = await Promise.all(promises)
     let allMedia: any[] = []
 
-    for (const result of results) {
-      if (result.error || result.data.error) {
+    for (const result of results as any[]) {
+      if (result.error || result.data?.error) {
         console.error(`[v0] ${result.source.toUpperCase()} Media Error:`, result.error || result.data.error)
         if (result.data?.error?.code === 190) {
            return NextResponse.json({ error: "Session Expired. Please Logout & Login." }, { status: 401 })

@@ -21,8 +21,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     });
 
     return json({ success: true });
-  } catch {
-    return json({ error: 'Internal server error' }, { status: 500 });
+  } catch (err: any) {
+    console.error("Gate Error:", err);
+    return json({ error: err?.message || 'Internal server error' }, { status: 500 });
   }
 };
 

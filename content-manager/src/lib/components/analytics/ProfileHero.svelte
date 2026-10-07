@@ -1,72 +1,109 @@
 <script lang="ts">
-  let { profileInfo } = $props<{
-    profileInfo: {
-      name: string;
-      profile_picture_url: string;
-      biography: string;
-      username: string;
-      media_count: number;
-      followers_count: number;
-      id: string;
-      website: string;
-      follows_count: number;
-      ig_id?: string;
-    }
+  let {
+    igProfile = {
+      name: 'Instagram Profile',
+      username: 'user',
+      profile_picture_url: '',
+      biography: '',
+      website: '',
+      media_count: 0
+    },
+    fbProfile = {
+      name: 'Facebook Page',
+      about: '',
+      picture: null
+    },
+    fbPostsCount = 0
+  } = $props<{
+    igProfile?: any;
+    fbProfile?: any;
+    fbPostsCount?: number;
   }>();
+
+  let fbPictureUrl = $derived(
+    fbProfile?.picture?.data?.url || fbProfile?.profile_picture_url || ''
+  );
 </script>
 
-<div class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 mb-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-  <div class="flex items-center gap-4 md:gap-6">
-    <img 
-      src={profileInfo.profile_picture_url} 
-      alt={profileInfo.name}
-      class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-slate-100 dark:border-slate-700 shadow-sm object-cover" 
-    />
+<div class="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 mb-8 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
+  <div class="flex items-start gap-4">
+    <div class="relative shrink-0">
+      <img 
+        src={igProfile.profile_picture_url || 'https://ui-avatars.com/api/?name=IG&background=random'} 
+        alt={igProfile.name}
+        class="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-slate-100 dark:border-slate-700 shadow-sm object-cover" 
+      />
+      <span class="absolute -bottom-1 -right-1 p-1 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white rounded-full shadow-sm" title="Instagram">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </span>
+    </div>
     
-    <div>
-      <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-        {profileInfo.name}
-        <span class="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">✓</span>
-      </h1>
-      <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">@{profileInfo.username}</p>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-1.5">
+        <h2 class="text-base md:text-lg font-bold text-slate-900 dark:text-white truncate">
+          {igProfile.name}
+        </h2>
+        <span class="bg-blue-500 text-white text-[9px] px-1 py-0.5 rounded-full font-bold">✓</span>
+      </div>
+      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">@{igProfile.username}</p>
       
-      {#if profileInfo.biography || profileInfo.website}
-        <div class="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 max-w-md mt-1">
-          {#if profileInfo.biography}
-            {profileInfo.biography.split('\n')[0]} 
-          {/if}
-          {#if profileInfo.website}
-            <a href={profileInfo.website} class="text-blue-500 dark:text-blue-400 hover:underline ml-2" target="_blank" rel="noopener noreferrer">
-              {(() => { try { return new URL(profileInfo.website).hostname.replace('www.', ''); } catch { return profileInfo.website; } })()}
+      {#if igProfile.biography || igProfile.website}
+        <div class="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 mb-2">
+          {igProfile.biography || ''}
+          {#if igProfile.website}
+            <a href={igProfile.website} class="text-blue-500 dark:text-blue-400 hover:underline ml-1" target="_blank" rel="noopener noreferrer">
+              {(() => { try { return new URL(igProfile.website).hostname.replace('www.', ''); } catch { return igProfile.website; } })()}
             </a>
           {/if}
         </div>
       {/if}
+
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+          {igProfile.media_count || 0} posts
+        </span>
+      </div>
     </div>
   </div>
 
-  <div class="flex items-center gap-8 text-center md:text-right shrink-0">
-    <div>
-      <div class="text-xl font-black text-slate-900 dark:text-white">{profileInfo.followers_count.toLocaleString()}</div>
-      <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Followers</div>
-    </div>
-    <div class="hidden sm:block">
-      <div class="text-xl font-black text-slate-900 dark:text-white">{profileInfo.media_count.toLocaleString()}</div>
-      <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Posts</div>
+  <div class="flex items-start gap-4 pt-4 md:pt-0 md:pl-6">
+    <div class="relative shrink-0">
+      {#if fbPictureUrl}
+        <img 
+          src={fbPictureUrl} 
+          alt={fbProfile.name}
+          class="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-slate-100 dark:border-slate-700 shadow-sm object-cover" 
+        />
+      {:else}
+        <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          FB
+        </div>
+      {/if}
+      <span class="absolute -bottom-1 -right-1 p-1 bg-blue-600 text-white rounded-full shadow-sm" title="Facebook">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      </span>
     </div>
     
-    <details class="relative group [&::-webkit-details-marker]:hidden">
-      <summary class="cursor-pointer p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors list-none outline-none">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      </summary>
-      <div class="absolute right-0 mt-2 w-64 p-4 bg-slate-900 dark:bg-slate-800 text-slate-300 text-xs rounded-xl shadow-xl z-50 border border-slate-700">
-        <div class="font-bold text-white mb-2 pb-2 border-b border-slate-700">API Metadata</div>
-        <div class="space-y-1 font-mono">
-          <p><span class="text-slate-500 dark:text-slate-400">ID:</span> {profileInfo.id}</p>
-          <p><span class="text-slate-500 dark:text-slate-400">Following:</span> {profileInfo.follows_count}</p>
-          <p><span class="text-slate-500 dark:text-slate-400">IG ID:</span> {profileInfo.ig_id || 'N/A'}</p>
-        </div>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-1.5">
+        <h2 class="text-base md:text-lg font-bold text-slate-900 dark:text-white truncate">
+          {fbProfile.name}
+        </h2>
+        <span class="bg-blue-500 text-white text-[9px] px-1 py-0.5 rounded-full font-bold">✓</span>
       </div>
-    </details>
+      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Facebook Page</p>
+      
+      {#if fbProfile.about}
+        <div class="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 mb-2">
+          {fbProfile.about}
+        </div>
+      {/if}
+
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+          {fbPostsCount || 0} published posts
+        </span>
+      </div>
+    </div>
   </div>
 </div>

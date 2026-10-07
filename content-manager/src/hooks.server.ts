@@ -4,7 +4,7 @@ import { verifyGateToken } from '$lib/gate';
 export const handle: Handle = async ({ event, resolve }) => {
   const { pathname } = event.url;
 
-  if (pathname.startsWith('/a') || pathname.startsWith('/content')) {
+  if (pathname === '/a' || pathname.startsWith('/a/') || pathname.startsWith('/content')) {
     const sessionCookie = event.cookies.get('dashboard_gate_session');
     const isValid = await verifyGateToken(sessionCookie);
 

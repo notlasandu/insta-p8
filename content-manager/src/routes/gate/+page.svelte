@@ -6,7 +6,10 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
-  let redirectPath = $derived(page.url.searchParams.get('redirect') || '/');
+  let rawRedirect = $derived(page.url.searchParams.get('redirect') || '/');
+  let redirectPath = $derived(
+    rawRedirect.startsWith('/api') || rawRedirect.startsWith('/gate') ? '/a/berl_view' : rawRedirect
+  );
 
   async function handleUnlock(e: Event) {
     e.preventDefault();
@@ -59,7 +62,6 @@
           bind:value={passcode}
           oninput={() => error = null}
           class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-center text-lg tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          autofocus
         />
         {#if error}
           <p class="text-center text-xs font-medium text-rose-500">

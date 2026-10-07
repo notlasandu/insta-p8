@@ -1,0 +1,39 @@
+name: Daily Meta Historical Sync (Instagram & Facebook)
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run Meta Sync to Supabase
+        working-directory: ./content-manager
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN || secrets.ACCESS_TOKEN || secrets.IG_ACCESS_TOKEN }}
+          IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID || '17841423877461958' }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1353894244476166' }}
+          TARGET_ACCOUNT: 'berl_view'
+        run: |
+          node scripts/sync-instagram.js
