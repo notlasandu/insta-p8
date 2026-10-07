@@ -108,15 +108,19 @@ export function useInstagramSession() {
         }
     }
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await fetch("/api/auth/gate", { method: "DELETE" })
+        } catch {}
         localStorage.removeItem("ig_user_id")
         localStorage.removeItem("ig_username")
         localStorage.removeItem("ig_profile_pic")
         document.cookie = "insta_session=; Max-Age=0; path=/;"
+        document.cookie = "dashboard_gate_session=; Max-Age=0; path=/;"
         setUsername(null)
         setUserId(null)
         setProfilePic(null)
-        router.push("/")
+        router.push("/gate")
     }
 
     return { userId, username, profilePic, isLoading, logout, pendingPages, selectPage }

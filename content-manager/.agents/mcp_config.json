@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "instagram": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcpware/instagram-mcp"
+      ],
+      "env": {
+        "INSTAGRAM_ACCESS_TOKEN": "EAAVZBLKUTMC4BSTgb9wipaR6KfDgCrJJMIbv25uv2ZCo6ZC0ZCZC4T1bdqJVZC6IZBxzQwExkO3pkEvNCsePj3pZAfdrDeBgUn4CgN7HFcNxKDSRfETWw19wJeFEsv3dax57ZA7gfvV4PCjLmBZB91FzisLplfFIxqEXw0P3fLfePTwlNYoyadDRRWJUBui9SsOczIH6rBTTPBI9MK6530ekvIqIh6utnmZBZBhabi4CeWRQMdZB0ZCJ9tvPGZA",
+        "INSTAGRAM_BUSINESS_ACCOUNT_ID": "17841432150082108",
+        "INSTAGRAM_ACCOUNT_ID": "17841432150082108"
+      }
+    }
+  }
+}
