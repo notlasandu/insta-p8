@@ -10,6 +10,7 @@ export function useInstagramSession() {
     const [userId, setUserId] = useState<string | null>(null)
     const [profilePic, setProfilePic] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isConnected, setIsConnected] = useState(true)
     const [pendingPages, setPendingPages] = useState<any[] | null>(null)
 
     const searchParams = useSearchParams()
@@ -22,16 +23,14 @@ export function useInstagramSession() {
             // CASE A: New Login from Facebook
             if (code) {
                 if (consumedCodes.has(code)) {
-                    // We already processed this code (StrictMode), so just load from local storage
                     const savedId = localStorage.getItem("ig_user_id")
                     const savedName = localStorage.getItem("ig_username")
                     if (savedId && savedName) {
                         setUserId(savedId)
                         setUsername(savedName)
                         setProfilePic(localStorage.getItem("ig_profile_pic"))
+                        setIsConnected(true)
                         
-                        // We also need pendingPages if we haven't selected one. 
-                        // Let's grab it from sessionStorage if we saved it there.
                         const savedPages = sessionStorage.getItem("pending_pages")
                         if (savedPages) setPendingPages(JSON.parse(savedPages))
                     }
@@ -55,20 +54,23 @@ export function useInstagramSession() {
                         setUserId(data.userId)
                         setUsername(data.username)
                         setProfilePic(data.profilePic || null)
+                        setIsConnected(true)
                         
-                        // Clear the code from the URL immediately so a refresh doesn't replay it
                         router.replace("/dashboard")
                         
                         if (data.pages && data.pages.length > 0) {
                             setPendingPages(data.pages)
                             sessionStorage.setItem("pending_pages", JSON.stringify(data.pages))
                         }
+                    } else {
+                        setIsConnected(false)
                     }
                 } catch (err) {
                     console.error("Login failed:", err)
+                    setIsConnected(false)
                 }
             }
-            // CASE B: Restore Session from LocalStorage
+            // CASE B: Restore Session from LocalStorage or Supabase
             else {
                 const savedId = localStorage.getItem("ig_user_id")
                 const savedName = localStorage.getItem("ig_username")
@@ -77,6 +79,24 @@ export function useInstagramSession() {
                     setUserId(savedId)
                     setUsername(savedName)
                     setProfilePic(localStorage.getItem("ig_profile_pic"))
+                    setIsConnected(true)
+                }
+
+                try {
+                    const res = await fetch("/api/auth/session")
+                    const sessionData = await res.json()
+
+                    if (sessionData?.connected && sessionData?.user) {
+                        setUserId(sessionData.user.id)
+                        setUsername(sessionData.user.username)
+                        localStorage.setItem("ig_user_id", sessionData.user.id)
+                        localStorage.setItem("ig_username", sessionData.user.username)
+                        setIsConnected(true)
+                    } else {
+                        if (!savedId) setIsConnected(false)
+                    }
+                } catch {
+                    if (!savedId) setIsConnected(false)
                 }
             }
             setIsLoading(false)
@@ -96,6 +116,7 @@ export function useInstagramSession() {
             const data = await res.json()
             if (data.success) {
                 setPendingPages(null)
+                setIsConnected(true)
                 sessionStorage.removeItem("pending_pages")
                 router.replace("/dashboard")
             } else {
@@ -120,8 +141,9 @@ export function useInstagramSession() {
         setUsername(null)
         setUserId(null)
         setProfilePic(null)
+        setIsConnected(false)
         router.push("/gate")
     }
 
-    return { userId, username, profilePic, isLoading, logout, pendingPages, selectPage }
+    return { userId, username, profilePic, isLoading, isConnected, logout, pendingPages, selectPage }
 }

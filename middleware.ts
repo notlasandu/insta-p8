@@ -5,15 +5,18 @@ import { verifyGateToken } from "@/lib/gate-auth"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Only protect /dashboard routes
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname === "/" || pathname.startsWith("/dashboard")) {
     const sessionCookie = request.cookies.get("dashboard_gate_session")?.value
     const isValid = await verifyGateToken(sessionCookie)
 
     if (!isValid) {
       const gateUrl = new URL("/gate", request.url)
-      gateUrl.searchParams.set("redirect", pathname + request.nextUrl.search)
+      gateUrl.searchParams.set("redirect", pathname === "/" ? "/dashboard" : pathname + request.nextUrl.search)
       return NextResponse.redirect(gateUrl)
+    }
+
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
     }
   }
 
@@ -21,5 +24,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/", "/dashboard/:path*"],
 }
