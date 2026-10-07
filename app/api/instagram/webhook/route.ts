@@ -300,6 +300,28 @@ export async function POST(request: NextRequest) {
 
           if (!senderId || senderId === webhookId || senderId === user.business_account_id || senderId === user.page_id) continue
 
+          // Cache incoming comment in post_comments
+          try {
+            const rawCommentText = isIgComment ? change.value.text : change.value.message
+            const senderName = change.value.from?.name || change.value.from?.username || "User"
+            const dbPlatform = isFbComment ? "facebook" : "instagram"
+            await supabase.from("post_comments").upsert({
+              id: commentId,
+              user_id: user.id,
+              platform: dbPlatform,
+              post_id: mediaId || "unknown",
+              post_caption: "Incoming Post",
+              parent_comment_id: parentId,
+              sender_id: senderId,
+              sender_username: senderName,
+              text: rawCommentText,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "id" })
+          } catch (e) {
+            console.warn("[webhook] Failed to cache post_comment:", e)
+          }
+
           const commentAutomations = automations.filter((a: any) => a.trigger_source === "comment")
 
           // Priority: specific post reply-all → specific post keyword → global keyword
@@ -545,7 +567,9 @@ export async function POST(request: NextRequest) {
             continue
           }
 
-          console.log(`[webhook] 📩 DM from ${senderId}: "${triggerValue}"`)
+          const isFb = body.object === "page" || event.recipient?.id === user.page_id
+          const dmPlatform = isFb ? "facebook" : "instagram"
+          console.log(`[webhook] 📩 [${dmPlatform}] DM from ${senderId}: "${triggerValue}"`)
 
           // Inbox bookkeeping runs alongside delivery, not ahead of it. Always
           // joined below so serverless shutdown cannot discard pending writes.
@@ -556,13 +580,16 @@ export async function POST(request: NextRequest) {
               .from("conversations")
               .select("id")
               .eq("user_id", user.id)
+              .eq("platform", dmPlatform)
               .eq("recipient_id", senderId)
               .single()
 
             if (!existing) {
               let realUsername = `cnt_${senderId.slice(0, 5)}...`
-              const profile = await fetchProfile(user.access_token, senderId)
-              if (profile?.username) realUsername = profile.username
+              if (!isFb) {
+                const profile = await fetchProfile(user.access_token, senderId)
+                if (profile?.username) realUsername = profile.username
+              }
 
               const { data: newConv } = await supabase
                 .from("conversations")
@@ -570,6 +597,8 @@ export async function POST(request: NextRequest) {
                   user_id: user.id,
                   recipient_id: senderId,
                   recipient_username: realUsername,
+                  platform: dmPlatform,
+                  last_message_snippet: triggerValue.slice(0, 150),
                   last_message_at: new Date().toISOString(),
                 })
                 .select("id")
@@ -579,7 +608,10 @@ export async function POST(request: NextRequest) {
               conv = existing
               await supabase
                 .from("conversations")
-                .update({ last_message_at: new Date().toISOString() })
+                .update({
+                  last_message_at: new Date().toISOString(),
+                  last_message_snippet: triggerValue.slice(0, 150),
+                })
                 .eq("id", existing.id)
             }
 
@@ -591,7 +623,9 @@ export async function POST(request: NextRequest) {
                 sender_id: senderId,
                 sender_username: "User",
                 content: triggerValue,
-                is_from_instagram: true,
+                platform: dmPlatform,
+                sender_type: "contact",
+                is_from_instagram: !isFb,
               })
             }
           } catch (err) {

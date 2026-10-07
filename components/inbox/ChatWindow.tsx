@@ -10,18 +10,19 @@ interface ChatWindowProps {
     conversationId: string | null
     recipientId?: string
     recipientName: string | null
+    platform?: 'instagram' | 'facebook'
     userId: string
     onBack?: () => void
 }
 
-export function ChatWindow({ conversationId, recipientId, recipientName, userId, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversationId, recipientId, recipientName, platform = 'instagram', userId, onBack }: ChatWindowProps) {
     const [messages, setMessages] = useState<Message[]>([])
     const [loading, setLoading] = useState(false)
     const [inputText, setInputText] = useState("")
     const [sending, setSending] = useState(false)
     const [isAutomationOpen, setIsAutomationOpen] = useState(false)
     const [automations, setAutomations] = useState<any[]>([])
-    const bottomRef = useRef<HTMLDivElement>(null)
+    const messagesContainerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (!conversationId) return
@@ -54,7 +55,9 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
     }, [userId])
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
     }, [messages])
 
     const handleSendMessage = async (text: string = inputText) => {
@@ -68,7 +71,9 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
                 body: JSON.stringify({
                     userId,
                     recipientId,
-                    message: text
+                    message: text,
+                    platform,
+                    conversationId,
                 })
             })
 
@@ -82,6 +87,8 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
                     sender_id: "me",
                     sender_username: "Me",
                     content: text,
+                    platform,
+                    sender_type: 'user',
                     is_from_instagram: false,
                     created_at: new Date().toISOString()
                 }
@@ -121,13 +128,23 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
                             <ChevronLeft className="w-6 h-6" />
                         </Button>
                     )}
-                    <div className="w-8 h-8 rounded-full bg-muted border border-border shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-muted border border-border shrink-0 flex items-center justify-center text-xs font-bold text-foreground">
+                        {(recipientName || "U").slice(0, 1).toUpperCase()}
+                    </div>
                     <div className="min-w-0">
-                        <h3 className="font-bold text-foreground text-sm truncate">@{recipientName}</h3>
-                        <span className="hidden md:flex items-center gap-1.5 text-[10px] text-success">
-                            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                            Online via Instagram
-                        </span>
+                        <h3 className="font-bold text-foreground text-sm truncate">{recipientName}</h3>
+                        <div className="flex items-center gap-1.5 text-[10px]">
+                            <span className={cn(
+                                "px-1.5 py-0.2 rounded font-bold uppercase text-[8px] text-white",
+                                platform === 'facebook' ? "bg-blue-600" : "bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600"
+                            )}>
+                                {platform === 'facebook' ? 'Messenger' : 'Instagram Direct'}
+                            </span>
+                            <span className="hidden md:flex items-center gap-1 text-success">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                                Active
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -138,14 +155,18 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
                 {loading ? (
                     <div className="flex justify-center py-10">
                         <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
                     </div>
                 ) : (
                     messages.map((msg) => {
-                        const isMe = !msg.is_from_instagram
+                        const isMe = msg.sender_type
+                            ? msg.sender_type !== "contact"
+                            : recipientId
+                            ? msg.sender_id !== recipientId
+                            : !msg.is_from_instagram
                         return (
                             <div key={msg.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
                                 <div className={cn(
@@ -154,7 +175,12 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
                                         ? "bg-primary text-primary-foreground rounded-br-none"
                                         : "bg-muted text-foreground rounded-bl-none border border-border"
                                 )}>
-                                    {msg.content}
+                                    {!isMe && msg.sender_username && (
+                                        <div className="text-[11px] font-semibold mb-1 text-primary">
+                                            {msg.sender_username}
+                                        </div>
+                                    )}
+                                    <div className="whitespace-pre-wrap">{msg.content}</div>
                                     <div className={cn(
                                         "text-[10px] mt-1 opacity-70",
                                         isMe ? "text-primary-foreground/70 text-right" : "text-muted-foreground"
@@ -166,7 +192,6 @@ export function ChatWindow({ conversationId, recipientId, recipientName, userId,
                         )
                     })
                 )}
-                <div ref={bottomRef} />
             </div>
 
             {/* Automation Popup */}
