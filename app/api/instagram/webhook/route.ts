@@ -273,13 +273,13 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      const { data: automations } = await supabase
+      const { data: rawAutomations } = await supabase
         .from("automations")
         .select("*")
         .eq("user_id", user.id)
         .eq("is_active", true)
 
-      if (!automations?.length) continue
+      const automations = rawAutomations || []
 
       // ============================================================
       //  PART A: COMMENTS

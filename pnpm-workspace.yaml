@@ -1,6 +1,8 @@
 packages:
   - "."
   - "content-manager"
+  - "packages/*"
+
 
 allowBuilds:
   sharp: true

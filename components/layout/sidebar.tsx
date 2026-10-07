@@ -14,6 +14,7 @@ const NAV = [
   { href: "/dashboard/ice-breakers", label: "Conversation starters", icon: "/icons/squads.svg" },
   { href: "/dashboard/analytics", label: "Insights", icon: "/icons/analytics.svg" },
   { href: "/dashboard/content", label: "Content Studio", icon: "/icons/studio.svg" },
+  { href: "/dashboard/mcp", label: "MCP Engine & Docs", icon: "/icons/code.svg" },
 ]
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
