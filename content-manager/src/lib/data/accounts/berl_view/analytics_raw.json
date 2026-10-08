@@ -2,11 +2,11 @@
   "profile_info": {
     "id": "17841423877461958",
     "biography": "AI for Business Growth",
-    "followers_count": 8,
+    "followers_count": 9,
     "follows_count": 2,
-    "media_count": 1,
+    "media_count": 2,
     "name": "Lasandu Malawaraarachchi",
-    "profile_picture_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t51.82787-15/825323945_18119653267795916_3611373893846375273_n.jpg?_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=7d201b&_nc_ohc=3J3yisDBRT0Q7kNvwFPKqis&_nc_oc=AdqyDfMJpp5_68tIB8YMP_5fpnS7VlAxstmVROsyzG0Wa9y_1ZuW01iRLj6MG2jRLwwbGCopICmkCFsc_nSjgTbf&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=AJ-jyNUEAAAA&_nc_gid=VflYPe0BXj5IFmdeqQNahA&oh=00_AQN62OpLGiGGpKew9OKC-aKX3KTQ9T3Ss6YTluiZy3MSHw&oe=6ACBFEA8",
+    "profile_picture_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t51.82787-15/839453022_18122638429795916_8237337794149620191_n.jpg?_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=7d201b&_nc_ohc=eRSmFsw_30IQ7kNvwGSg-J_&_nc_oc=AdqXZ6gM4cY_VhOisL5fV53o0cmOmgB-z13VZODcH8r06dDkVK7r5nLDYNcsazqC_JC2Bc1xRtlUy9gYvA4RBBS-&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=AJ-jyNUEAAAA&_nc_gid=m6o9T6Nkn61b_sV79GcyIw&oh=00_AQMyHAaIM9jw--qv07qFUSERNm_M3kUTG7wEs-wfHhS2mA&oe=6ACD1AC4",
     "username": "copiumbuilder",
     "website": "https://linktr.ee/copiumbuilder"
   },
@@ -18,7 +18,7 @@
       "title": "Accounts reached",
       "description": "The number of unique accounts that have seen your content, at least once, including in ads. Content includes posts, stories, reels, videos and live videos. Reach is different from impressions, which may include multiple views of your content by the same accounts. This metric is estimated and in development.",
       "total_value": {
-        "value": 1
+        "value": 56
       }
     },
     {
@@ -28,7 +28,7 @@
       "title": "Accounts engaged",
       "description": "The number of accounts that have interacted with your content, including in ads. Content includes posts, stories, reels, videos and live videos. Interactions can include actions such as likes, saves, comments, shares or replies. These metrics are estimated and in development.",
       "total_value": {
-        "value": 0
+        "value": 8
       }
     },
     {
@@ -38,7 +38,7 @@
       "title": "Profile visits",
       "description": "The number of times that your profile was visited.",
       "total_value": {
-        "value": 2
+        "value": 21
       }
     },
     {
@@ -48,7 +48,7 @@
       "title": "Website link taps",
       "description": "The number of times that the link to your website was tapped.",
       "total_value": {
-        "value": 0
+        "value": 1
       }
     }
   ],
@@ -81,18 +81,58 @@
         "engaged": 0,
         "followers": 15
       }
+    },
+    {
+      "date": "2026-10-08",
+      "reach": 56,
+      "engaged": 8,
+      "views": 21,
+      "clicks": 1,
+      "followers": 16,
+      "instagram": {
+        "reach": 56,
+        "views": 21,
+        "clicks": 1,
+        "engaged": 8,
+        "followers": 9
+      },
+      "facebook": {
+        "reach": 0,
+        "views": 0,
+        "clicks": 0,
+        "engaged": 0,
+        "followers": 7
+      },
+      "combined": {
+        "reach": 56,
+        "views": 21,
+        "clicks": 1,
+        "engaged": 8,
+        "followers": 16
+      }
     }
   ],
   "media_posts": [
     {
+      "id": "18465352351139862",
+      "caption": "Web design එකකට ලක්ෂ ගාණක් ගෙවන්න කලින් හැම business owner කෙනෙක්ම දැනගන්න ඕන ඇත්තක් තියෙනවා:\n\nWebsite එකක් කියන්නේ showcase එකක් නෙවෙයි, conversion asset එකක්. ඔයාගේ site එකෙන් inquiries generate වෙන්නේ නැත්නම්, miss වෙලා තියෙන්නේ මේ fundamentals 3:\n\n1️⃣ Offer Clarity — මිනිස්සුන්ට ඔයා කවුද කියන එකට වඩා වැදගත් වෙන්නේ ඔයාගෙන් එයාලට ලැබෙන practical ප්‍රතිඵලය මොකක්ද කියන එක.\n2️⃣ Intentional Traffic — හරියට targeted audience එකක් drive කරන්නේ නැතුව තියෙන website එකක් කාටවත් පේන්නේ නෑ.\n3️⃣ Frictionless Lead Capture — Visitor කෙනෙක්ව instant inquiry එකක් බවට හරවගන්න compelling reason එකක් නොදෙන එක.\n\nWebsite එකෙන් regular business leads එන system එකක් හදාගන්න විදිහ බලන්න ඕනෙනම්, follow කරලා \"SALES\" කියලා comment කරන්න. මම step-by-step guide එක inbox එකට එවන්නම්! 📩",
+      "media_type": "VIDEO",
+      "media_url": "https://instagram.fcmb1-2.fna.fbcdn.net/o1/v/t2/f2/m86/AQMWTcwVDGVvzXnBG6ltiMOopXF6FehH_AMpEdtBqGX66tArcSvSNik0M6iuR5nhJvKovztqAVGAEfV61jKjGt97jisdXDer4SArBUA.mp4?_nc_cat=107&_nc_oc=AdqMZ4QST-SbuU_ip9cvp1m2pxbyAmSXtsDxsy9lksnEGqedHOamiTgsPbjN8R9QVXrO62L42n_EkA9pPJuwBY-w&_nc_sid=5e9851&_nc_ht=instagram.fcmb1-2.fna.fbcdn.net&_nc_ohc=sji8XVHBsNEQ7kNvwGCRvF1&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTgxMjI2MjcxNzY3OTU5MTYsImFzc2V0X2FnZV9kYXlzIjowLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6NjQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=ab2634c4ac7dc4fb&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC80M0U3OENGQjI4QUY0QUM4OTRBRjIyM0YyMTFGREExRF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0JGQ0FCQUVDMEVEQTQ1NTA5NDUyMDgyOUE3QjI0NTRGX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaYvKi03puxQBUCKAJDMywXQFA1T987ZFoYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=LW1BALuwa6zcosrk8akmwQ&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQP_rIfAXfulxzhevgvbTk3vOCVITJ7_sYbT1RLq1Ol68g&oe=6AC91BF4",
+      "thumbnail_url": "https://scontent.cdninstagram.com/v/t51.82787-15/839166290_18122627614795916_4619138181682807366_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=vtOp8kTvLUIQ7kNvwHyDlZ4&_nc_oc=Adpm5MSCCogPBXguw0kmY4TTBmv_VmBZUWZ_vLIv6PYyalXvzc_fAUYdDDWaxHyrKbJJVN5bUR7oM7WpQdR1QLBE&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=LW1BALuwa6zcosrk8akmwQ&_nc_tpa=Q5bMBQJVRpIo5ff7JubtUkXIzDPW1WPWwknVZ4amVTTcbXl9q6nBnXfcKuwdihRnL64RVqWh1nMZcd-6MA&oh=00_AQMpIHWIloi4TbiX1St2fPG7nWfJiF6nZvVTGRmfWdU1YQ&oe=6ACD07AC",
+      "permalink": "https://www.instagram.com/reel/DeMdE9Fkh3X/",
+      "timestamp": "2026-10-07T13:22:08+0000",
+      "like_count": 5,
+      "comments_count": 4
+    },
+    {
       "id": "18099159200073066",
       "caption": "AI වලින් ඔයාගේ business එකේ customersලා වැඩි කරගන්න පුළුවන් ක්‍රම 5ක් මෙන්න! \n\n1️⃣ පරණ customersලා ආපහු ගෙන්න ගන්න\n2️⃣ 24/7 calls සහ messages වලට respond කරන්න\n3️⃣ Free tools වලින් leads collect කරගන්න\n4️⃣ Reviews analyze කරලා අලුත් offers හදන්න\n5️⃣ Follow-up process එක automate කරන්න\n\nමේවා කරන විදිහ හරියටම දැනගන්න නම්, මාව follow කරලා \"AI\" කියලා comment එකක් දාන්න! \n\n#AI #BusinessTips #ChatGPT #Sinhala #SriLankaBusiness",
       "media_type": "VIDEO",
-      "media_url": "https://instagram.fcmb1-2.fna.fbcdn.net/o1/v/t2/f2/m86/AQOpFr7_N2NK9oUnxYkkWBJQTZR-LslrEvH-lDCYKfuuVavdXB5EomE0E19JgIPnAJa-1F5F1my0mw1vAPymSjd7xDvu3uSmpwA-ZUs.mp4?_nc_cat=100&_nc_oc=Adphx3Egz-ZJNx_zwOxqnge8yKCJz6WKvG6rBP0B25_Ng_-9ae3YJyEawtHWoeA683XZtC9LQFtJhVPgoJWOD_6L&_nc_sid=5e9851&_nc_ht=instagram.fcmb1-2.fna.fbcdn.net&_nc_ohc=3t3QDpS7kZMQ7kNvwE7cuh7&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTgxMTk2NTE3NTI3OTU5MTYsImFzc2V0X2FnZV9kYXlzIjo4LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6NDYsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=71b1a10112c35c0e&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8xMzQzMzc4NDM1NDQzMzU5NDREMUZCMUY5OUNDQjNBMF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0VENEFGMDg4MEM0RkY0MUVCMDIzQkVBRjg4QUU0QTkyX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaY_O7ixe6vQBUCKAJDMywXQEcAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=ujciITl2GYBgyE48t8GMdA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQPg2J1WAhrOfpznaGgMxrlnDJ0zwEcp76qSGP7dXskA4A&oe=6AC7E3E9",
-      "thumbnail_url": "https://scontent.cdninstagram.com/v/t51.82787-15/825320878_18119651914795916_198862597398542966_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=8g5w0Kp_bnIQ7kNvwGVisba&_nc_oc=AdrZBb2CD3qE3CgXG974oeMa6TJDjynvBQ-Ou7C7Gtv3LbgD0OKshFr5D8EHamLW3enRc0w3D9Z4nuwM0WEBiOM6&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=ujciITl2GYBgyE48t8GMdA&_nc_tpa=Q5bMBQKggkFPOXWGXGxgBJYP4KIw5ZRcht-4p2LW6pSyzTkV9israzuUBPxI65QdsWikVNh26CAgHJ_lPQ&oh=00_AQN9xZQc4nf3rvQPG-2JHNGUafasiLzlU2LWnNZn82ZJ9A&oe=6ACBF017",
+      "media_url": "https://instagram.fcmb1-2.fna.fbcdn.net/o1/v/t2/f2/m86/AQOpFr7_N2NK9oUnxYkkWBJQTZR-LslrEvH-lDCYKfuuVavdXB5EomE0E19JgIPnAJa-1F5F1my0mw1vAPymSjd7xDvu3uSmpwA-ZUs.mp4?_nc_cat=100&_nc_oc=Adqc6d3vcRbxStwokm22T44Ao6BPoWTVMOjL2YJWyBzWcyFCruRhAP5gIJ5eO0i10AikbYE1p9nqd-4rSQvd2nVQ&_nc_sid=5e9851&_nc_ht=instagram.fcmb1-2.fna.fbcdn.net&_nc_ohc=3t3QDpS7kZMQ7kNvwF5OSaN&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTgxMTk2NTE3NTI3OTU5MTYsImFzc2V0X2FnZV9kYXlzIjo5LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6NDYsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=71b1a10112c35c0e&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8xMzQzMzc4NDM1NDQzMzU5NDREMUZCMUY5OUNDQjNBMF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0VENEFGMDg4MEM0RkY0MUVCMDIzQkVBRjg4QUU0QTkyX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaY_O7ixe6vQBUCKAJDMywXQEcAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=LW1BALuwa6zcosrk8akmwQ&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQNT-fyaZXq7DaQPTEdY768dIMY72yi4_2gHZsThBomrkA&oe=6AC93569",
+      "thumbnail_url": "https://scontent.cdninstagram.com/v/t51.82787-15/825320878_18119651914795916_198862597398542966_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=8g5w0Kp_bnIQ7kNvwHjqwM2&_nc_oc=AdowCV_3SRvi6f46mYtsDhIoTUO-XJofGWEnKfuOqW85E3zhNk4zBEZC-ljQUKT2l6wShziGKejbwcJFsshkpQHL&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=LW1BALuwa6zcosrk8akmwQ&_nc_tpa=Q5bMBQIBLnUwXI5Dk6TXhFZOoLe22T7OdBOU3CLyGDsmGx6kFAfS5ZpZUm_CAPXDiCUmr8xOhopcmDBLCg&oh=00_AQPHJ3QquHnKgvDsAWBGhakApwUp5OQLmkgb3RrgEDSkXw&oe=6ACD0957",
       "permalink": "https://www.instagram.com/reel/Dd1NagOEmY_/",
       "timestamp": "2026-09-28T12:42:34+0000",
-      "like_count": 7,
+      "like_count": 10,
       "comments_count": 10
     }
   ],
@@ -106,7 +146,7 @@
         "description": "The number of unique accounts that have seen this reel at least once. Reach is different from impressions, which may include multiple views of your reel by the same accounts. This metric is estimated.",
         "values": [
           {
-            "value": 123
+            "value": 128
           }
         ]
       },
@@ -134,6 +174,44 @@
           }
         ]
       }
+    ],
+    "18465352351139862": [
+      {
+        "id": "18465352351139862/insights/reach/lifetime",
+        "name": "reach",
+        "period": "lifetime",
+        "title": "Accounts reached",
+        "description": "The number of unique accounts that have seen this reel at least once. Reach is different from impressions, which may include multiple views of your reel by the same accounts. This metric is estimated.",
+        "values": [
+          {
+            "value": 55
+          }
+        ]
+      },
+      {
+        "id": "18465352351139862/insights/saved/lifetime",
+        "name": "saved",
+        "period": "lifetime",
+        "title": "Saved",
+        "description": "The number of saves of your reel.",
+        "values": [
+          {
+            "value": 0
+          }
+        ]
+      },
+      {
+        "id": "18465352351139862/insights/shares/lifetime",
+        "name": "shares",
+        "period": "lifetime",
+        "title": "Shares",
+        "description": "The number of shares of your reel.",
+        "values": [
+          {
+            "value": 0
+          }
+        ]
+      }
     ]
   },
   "facebook_profile_info": {
@@ -145,7 +223,7 @@
       "data": {
         "height": 50,
         "is_silhouette": false,
-        "url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-1/829272373_122103256449488676_290089165796793651_n.jpg?stp=cp0_dst-jpg_s50x50_tt6&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=f907e8&_nc_ohc=_LzYhO4ihUIQ7kNvwFT6Omi&_nc_oc=AdoBPPZEKs35t52Yc3W6jeTiJl728xWLOXaZPQ28_8LZQWUIMTElg1Ix0v9R1MkCZEhJQj4tXiBKZCZZjas0-1f3&_nc_zt=24&_nc_ht=scontent.fcmb1-2.fna&edm=AJdBtusEAAAA&_nc_gid=v7gAGrMKytLzoKEOKsvzfQ&_nc_tpa=Q5bMBQInS3cqDGfBy32BwBUZkUZerBW5ynBQxohA16jRAC1veabHLL4nezB8-mUcOt6WX1NPEemn21hIQQ&oh=00_AQP05PHhBTWvMT6At69tgZdqhsrcVjdWz2iirbPEyXC9nA&oe=6ACBF4BF",
+        "url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-1/840378966_122110981197488676_1289659638825452054_n.jpg?stp=cp0_dst-jpg_s50x50_tt6&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=f907e8&_nc_ohc=6_hqMUc1wCMQ7kNvwGaDz4L&_nc_oc=AdrgZwKnhsQ5jyg-i751Y7pvBxPcN30dpSPG9-EtZiB39u-ssnclW26rONxfQrwhhfpwyCBylx8AlkwAKyfnS62D&_nc_zt=24&_nc_ht=scontent.fcmb1-2.fna&edm=AJdBtusEAAAA&_nc_gid=pXH0yCeCfy9_-RIeOXGHBw&_nc_tpa=Q5bMBQK8uZtF0UyM6nebs509phRoijJXMOaH6P7zroVQASfAAfNhu3exO82xuAX6dTDGHiyHVe7YUfzLWQ&oh=00_AQOTaDsU2E4nyUKRDV2PTydi8cELjq3h0KR5taALiCjwew&oe=6ACD0AE3",
         "width": 50
       }
     },
@@ -159,11 +237,11 @@
       "values": [
         {
           "value": 0,
-          "end_time": "2026-10-05T07:00:00+0000"
+          "end_time": "2026-10-06T07:00:00+0000"
         },
         {
           "value": 0,
-          "end_time": "2026-10-06T07:00:00+0000"
+          "end_time": "2026-10-07T07:00:00+0000"
         }
       ],
       "title": "Daily Post Engagements",
@@ -176,11 +254,11 @@
       "values": [
         {
           "value": 0,
-          "end_time": "2026-10-05T07:00:00+0000"
+          "end_time": "2026-10-06T07:00:00+0000"
         },
         {
           "value": 0,
-          "end_time": "2026-10-06T07:00:00+0000"
+          "end_time": "2026-10-07T07:00:00+0000"
         }
       ],
       "title": "Daily New Follows",
@@ -193,11 +271,11 @@
       "values": [
         {
           "value": 0,
-          "end_time": "2026-10-05T07:00:00+0000"
+          "end_time": "2026-10-06T07:00:00+0000"
         },
         {
           "value": 0,
-          "end_time": "2026-10-06T07:00:00+0000"
+          "end_time": "2026-10-07T07:00:00+0000"
         }
       ],
       "title": "Daily Total views count per Page",
@@ -209,12 +287,12 @@
       "period": "day",
       "values": [
         {
-          "value": 1,
-          "end_time": "2026-10-05T07:00:00+0000"
+          "value": 0,
+          "end_time": "2026-10-06T07:00:00+0000"
         },
         {
           "value": 0,
-          "end_time": "2026-10-06T07:00:00+0000"
+          "end_time": "2026-10-07T07:00:00+0000"
         }
       ],
       "title": "Daily Total Video Views",
@@ -224,15 +302,28 @@
   ],
   "facebook_posts": [
     {
-      "id": "1353894244476166_122103256569488676",
+      "id": "1353894244476166_122110981233488676",
       "caption": "",
-      "created_time": "2026-09-28T12:47:18+0000",
-      "timestamp": "2026-09-28T12:47:18+0000",
+      "created_time": "2026-10-07T14:08:15+0000",
+      "timestamp": "2026-10-07T14:08:15+0000",
       "media_type": "profile_media",
-      "media_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-6/829272373_122103256449488676_290089165796793651_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=_LzYhO4ihUIQ7kNvwFT6Omi&_nc_oc=AdoBPPZEKs35t52Yc3W6jeTiJl728xWLOXaZPQ28_8LZQWUIMTElg1Ix0v9R1MkCZEhJQj4tXiBKZCZZjas0-1f3&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=dObY9Cp6H0ojVZJmyWBvLw&_nc_tpa=Q5bMBQJgW1SSB9zigxZjc1bucVsRn7VP9K3cfw8MdAfzyLayT0rFSgRaot10Ee4MVyUXWASFFpPRMcF_Vw&oh=00_AQPtkO-gr-3b299LdgRiEerlV5mBOyqV9d1vGjKJ-Fha0g&oe=6ACC034F",
-      "thumbnail_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-6/829272373_122103256449488676_290089165796793651_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=_LzYhO4ihUIQ7kNvwFT6Omi&_nc_oc=AdoBPPZEKs35t52Yc3W6jeTiJl728xWLOXaZPQ28_8LZQWUIMTElg1Ix0v9R1MkCZEhJQj4tXiBKZCZZjas0-1f3&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=dObY9Cp6H0ojVZJmyWBvLw&_nc_tpa=Q5bMBQJgW1SSB9zigxZjc1bucVsRn7VP9K3cfw8MdAfzyLayT0rFSgRaot10Ee4MVyUXWASFFpPRMcF_Vw&oh=00_AQPtkO-gr-3b299LdgRiEerlV5mBOyqV9d1vGjKJ-Fha0g&oe=6ACC034F",
-      "permalink": "https://www.facebook.com/122104913037488676/posts/122103256569488676?substory_index=1005582295273768",
-      "like_count": 0,
+      "media_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-6/840378966_122110981197488676_1289659638825452054_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=6_hqMUc1wCMQ7kNvwGaDz4L&_nc_oc=AdrgZwKnhsQ5jyg-i751Y7pvBxPcN30dpSPG9-EtZiB39u-ssnclW26rONxfQrwhhfpwyCBylx8AlkwAKyfnS62D&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=gi2W6ftGIO5_hzCWFc_rCQ&_nc_tpa=Q5bMBQKlEvJjM9d7toQvUtP5Bkez4GdlwNWWOJ9luY9pZYfCzNxWYWTJW8EL2DqLaYeEELqOCKK_cWsxFg&oh=00_AQP6QLFpfmqwqZCD_SAqKWNCQUOOnV6BWzS25OJTzAdmkQ&oe=6ACD1508",
+      "thumbnail_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-6/840378966_122110981197488676_1289659638825452054_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=6_hqMUc1wCMQ7kNvwGaDz4L&_nc_oc=AdrgZwKnhsQ5jyg-i751Y7pvBxPcN30dpSPG9-EtZiB39u-ssnclW26rONxfQrwhhfpwyCBylx8AlkwAKyfnS62D&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=gi2W6ftGIO5_hzCWFc_rCQ&_nc_tpa=Q5bMBQKlEvJjM9d7toQvUtP5Bkez4GdlwNWWOJ9luY9pZYfCzNxWYWTJW8EL2DqLaYeEELqOCKK_cWsxFg&oh=00_AQP6QLFpfmqwqZCD_SAqKWNCQUOOnV6BWzS25OJTzAdmkQ&oe=6ACD1508",
+      "permalink": "https://www.facebook.com/122104913037488676/posts/122110981233488676?substory_index=1029810923449871",
+      "like_count": 1,
+      "comments_count": 0,
+      "shares_count": 0
+    },
+    {
+      "id": "1353894244476166_122110968489488676",
+      "caption": "Web design එකකට ලක්ෂ ගාණක් ගෙවන්න කලින් හැම business owner කෙනෙක්ම දැනගන්න ඕන ඇත්තක් තියෙනවා:\n\nWebsite එකක් කියන්නේ showcase එකක් නෙවෙයි, conversion asset එකක්. ඔයාගේ site එකෙන් inquiries generate වෙන්නේ නැත්නම්, miss වෙලා තියෙන්නේ මේ fundamentals 3:\n\n1️⃣ Offer Clarity — මිනිස්සුන්ට ඔයා කවුද කියන එකට වඩා වැදගත් වෙන්නේ ඔයාගෙන් එයාලට ලැබෙන practical ප්‍රතිඵලය මොකක්ද කියන එක.\n2️⃣ Intentional Traffic — හරියට targeted audience එකක් drive කරන්නේ නැතුව තියෙන website එකක් කාටවත් පේන්නේ නෑ.\n3️⃣ Frictionless Lead Capture — Visitor කෙනෙක්ව instant inquiry එකක් බවට හරවගන්න compelling reason එකක් නොදෙන එක.\n\nWebsite එකෙන් regular business leads එන system එකක් හදාගන්න විදිහ බලන්න ඕනෙනම්, follow කරලා \"SALES\" කියලා comment කරන්න. මම step-by-step guide එක inbox එකට එවන්නම්! 📩",
+      "created_time": "2026-10-07T13:22:14+0000",
+      "timestamp": "2026-10-07T13:22:14+0000",
+      "media_type": "VIDEO",
+      "media_url": "https://scontent.fcmb1-2.fna.fbcdn.net/o1/v/t2/f2/m366/AQOxgOdSYp1ExVFV0zGqtyofe-qF-qgkZo-swXJXX4fTLFtdmxDdrP3cRL9rUWq7bVHFNbjMYzE3G3snBM9iwjI7bhEs4CMZrnhsEQ3j3J0Csw.mp4?_nc_cat=111&_nc_oc=Adr9C9kxwBvrpUSPQiuWXKIxWjxrUAy5quTXTwDZr3drwinyUKhfxXPfHxIUR9Fv0Q5fu2izSvEWgB54RKAWfWDr&_nc_sid=5e9851&_nc_ht=scontent.fcmb1-2.fna.fbcdn.net&_nc_ohc=zvQ98CXDlnoQ7kNvwEd5Puu&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjI4NTMzNTIxMzI2MzQwNzYzLCJhc3NldF9hZ2VfZGF5cyI6MCwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjY0LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=b3e1cd9a865be046&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9GNzNDRTFDMjFCNDU0OEI2QTlCRTZEMDZFOTZGOTQ1NV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0E5MDYzMkEzNkZGOTQwMDVCMEUxQTU4MERDQUQxQ0M4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACa26setxMWvZRUCKAJDMywXQFA1T987ZFoYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUCZZSeAQA&_nc_gid=gi2W6ftGIO5_hzCWFc_rCQ&edm=APyxFHYEAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&_nc_tpa=Q5bMBQKA9jIw-q4wgmHDbeNl0-UROG5vmbiZXaxfjl8lZw3iZTJBtunpj5AEqipEX2dTZlfIoWioNAwhbw&oh=00_AQPs2Jivcuee76oCxCm-77DKjLgkP7ds9JuI08Tm5RWsAg&oe=6ACD0A5D&bitrate=743130&tag=dash_h264-basic-gen2_720p",
+      "thumbnail_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t15.5256-10/839109514_1719024022540757_8538606574467042134_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=d2b52d&_nc_ohc=pUe0qWxx3GkQ7kNvwEqlry5&_nc_oc=AdpL21fHP2qe30B5_OeAwmLmZvvcIun_acs_n3cU7wMB2aYqRc4nTyK4HuRZvj0u23CYzl1hh4E6tJBIu0rPF8A2&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=gi2W6ftGIO5_hzCWFc_rCQ&_nc_tpa=Q5bMBQLACFeUNswi10JcDzaQllOd7pN9wJXLBM_JspX_TmOvNpWrWx6tvm-FJ7fZUL2P4hdSRc1_7IFn-Q&oh=00_AQMb0jbZ1QJg1rL9yzJe2HMA02FAsY3ho9TlVuBpLMykMw&oe=6ACD317E",
+      "permalink": "https://www.facebook.com/reel/1830152751356086/",
+      "like_count": 2,
       "comments_count": 0,
       "shares_count": 0
     },
@@ -242,8 +333,8 @@
       "created_time": "2026-09-28T12:43:06+0000",
       "timestamp": "2026-09-28T12:43:06+0000",
       "media_type": "VIDEO",
-      "media_url": "https://scontent.fcmb1-2.fna.fbcdn.net/o1/v/t2/f2/m366/AQNcvawN_n1Deql6ghp5HI4hm07Xo7xuFj0eGIsXzrundYs9N40odiyzEIWAIv_guSPcaMUDcbj_v6qVEfSYTpBcF50hlolITGrCDLyBLm9muA.mp4?_nc_cat=109&_nc_oc=AdrsYhNvR3o9snK38TWhLIWjqsGCSzyJqXYBuUNUJMk72vm5pfep7xVqET-UWCIBavAtwMhvIHkQHAkoVakV4Um9&_nc_sid=5e9851&_nc_ht=scontent.fcmb1-2.fna.fbcdn.net&_nc_ohc=J5wkMSduYj0Q7kNvwFAeHPB&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjkyMDI2NzkzNzUzNTAyMSwiYXNzZXRfYWdlX2RheXMiOjgsInZpX3VzZWNhc2VfaWQiOjEwMTIyLCJkdXJhdGlvbl9zIjo0NiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=5ac81d1f35ff7961&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9FRjRFMDhGODJFQkI2OURCQkUwRTI2OTA2MzE2QkI5Rl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0JENDhBMzRBOTdGMzYwOThBQzAxRDY1MEZEMDMzMUIxX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACba0J640r6iAxUCKAJDMywXQEcAAAAAAAAYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUCZZSeAQA&_nc_gid=dObY9Cp6H0ojVZJmyWBvLw&edm=APyxFHYEAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&_nc_tpa=Q5bMBQJsOMHojARStMGMgzlcleZeA0tmUgCS7YL-sHH8HN73PUH8WvUkpxjzO4ZqCO_d_r3iItzxXkSFCg&oh=00_AQPnWHem3Ou5VnziMSic9-f-jf_u4rDiOsokOKgFkySgdQ&oe=6ACC018B&bitrate=637242&tag=dash_h264-basic-gen2_720p",
-      "thumbnail_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t15.5256-10/830434168_1391890772610226_4909251856500043351_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=d2b52d&_nc_ohc=tNF51WGwS0oQ7kNvwHLtm_9&_nc_oc=AdrRRST7Xd4Gjq4OvecEDHIgYQDYmPPDwOcT4X_vWlI7tuzTpEPe9i4A4qbVJw4tJaK0_D8Cp_eI9Hu2geEb9MuZ&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=dObY9Cp6H0ojVZJmyWBvLw&_nc_tpa=Q5bMBQIFuiHSJIdbIf6xxrIP7-t8ijI2_Wo2qWzU9kD-Vq-BY5VoUqpZQikdYPi-sjnNJ69kasGQ7Xmljg&oh=00_AQN2X0N8HCIG6UrUnmbNLQL3awSVIEXybiSTqXmOYTrUSA&oe=6ACC07CA",
+      "media_url": "https://scontent.fcmb1-2.fna.fbcdn.net/o1/v/t2/f2/m366/AQNcvawN_n1Deql6ghp5HI4hm07Xo7xuFj0eGIsXzrundYs9N40odiyzEIWAIv_guSPcaMUDcbj_v6qVEfSYTpBcF50hlolITGrCDLyBLm9muA.mp4?_nc_cat=109&_nc_oc=AdrlW5uuea7rZu3obaqn3mnAwTilXk88ChiCDYIG4wPd36_mNEBO0Q27Sxe-fo3be_YhkAsfb2FTJd-AfRY9P0lr&_nc_sid=5e9851&_nc_ht=scontent.fcmb1-2.fna.fbcdn.net&_nc_ohc=J5wkMSduYj0Q7kNvwFnEVqS&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjkyMDI2NzkzNzUzNTAyMSwiYXNzZXRfYWdlX2RheXMiOjksInZpX3VzZWNhc2VfaWQiOjEwMTIyLCJkdXJhdGlvbl9zIjo0NiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=5ac81d1f35ff7961&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9FRjRFMDhGODJFQkI2OURCQkUwRTI2OTA2MzE2QkI5Rl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhAZmJfcGVybWFuZW50L0JENDhBMzRBOTdGMzYwOThBQzAxRDY1MEZEMDMzMUIxX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACba0J640r6iAxUCKAJDMywXQEcAAAAAAAAYGWRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHARAHUCZZSeAQA&_nc_gid=gi2W6ftGIO5_hzCWFc_rCQ&edm=APyxFHYEAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&_nc_tpa=Q5bMBQKtFojaYCT6xZqJ0l99fGjYATN7ksEP3iRh7nGymYluc_LI9HOxkwTOHSUImC7Qz1n-s4w_WljCPQ&oh=00_AQOoq8NqOEOlI-sFzNZO7kzojqJw5LD9BA6mkjDaxAHeSw&oe=6ACD1ACB&bitrate=637242&tag=dash_h264-basic-gen2_720p",
+      "thumbnail_url": "https://scontent.fcmb1-2.fna.fbcdn.net/v/t15.5256-10/830434168_1391890772610226_4909251856500043351_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=d2b52d&_nc_ohc=tNF51WGwS0oQ7kNvwErslwg&_nc_oc=Adq6RHPO7YKVfjGkLMaEbIwRBGGObmdt0mqsLy2WaM_19Px2HO_c84aj83YmEmPsxq7aOdcievF8DW-SNZ6jKjlu&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&edm=APyxFHYEAAAA&_nc_gid=gi2W6ftGIO5_hzCWFc_rCQ&_nc_tpa=Q5bMBQLWxET-18sYYYUJtYxyl3hcHQK2rv0MuMoFPVvI39937OhzGa9KoDR9KHgyGc4wxa9MzGouzFrj_Q&oh=00_AQPF6AFCpYcC3VjTSJArIN-X97TstexJkv2lZCRyeDE5RQ&oe=6ACD210A",
       "permalink": "https://www.facebook.com/reel/1357616266181889/",
       "like_count": 5,
       "comments_count": 2,

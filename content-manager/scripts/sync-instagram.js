@@ -23,9 +23,20 @@ if (!ACCESS_TOKEN) {
 
 if (!ACCESS_TOKEN) {
   try {
-    const { data: userRow } = await supabase.from('users').select('access_token').eq('username', 'copiumbuilder').single();
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('access_token')
+      .or(`business_account_id.eq.${process.env.IG_ACCOUNT_ID || '17841423877461958'},id.eq.1618667293386976`)
+      .limit(1)
+      .maybeSingle();
+
     if (userRow?.access_token) {
       ACCESS_TOKEN = userRow.access_token;
+    } else {
+      const { data: anyUser } = await supabase.from('users').select('access_token').limit(1).maybeSingle();
+      if (anyUser?.access_token) {
+        ACCESS_TOKEN = anyUser.access_token;
+      }
     }
   } catch (e) {
     // Supabase query failed
