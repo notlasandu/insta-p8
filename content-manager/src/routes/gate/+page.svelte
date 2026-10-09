@@ -6,10 +6,7 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
-  let rawRedirect = $derived(page.url.searchParams.get('redirect') || '/');
-  let redirectPath = $derived(
-    rawRedirect.startsWith('/api') || rawRedirect.startsWith('/gate') ? '/a/berl_view' : rawRedirect
-  );
+  let redirectPath = $derived(page.url.searchParams.get('redirect') || '/');
 
   async function handleUnlock(e: Event) {
     e.preventDefault();

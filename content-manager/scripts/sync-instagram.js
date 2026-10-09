@@ -71,7 +71,7 @@ async function fetchFromMeta(endpoint, params = {}) {
 async function runSync() {
   console.log("Starting Meta Sync with Supabase integration...");
 
-  const targetAccount = process.env.TARGET_ACCOUNT || 'berl_view';
+  const targetAccount = process.env.TARGET_ACCOUNT || 'copiumbuilder';
   const dataPath = path.join(process.cwd(), 'src', 'lib', 'data', 'accounts', targetAccount, 'analytics_raw.json');
   let data = {};
 

@@ -30,25 +30,36 @@
   {/if}
 {/snippet}
 
-<details class="relative [&::-webkit-details-marker]:hidden" bind:open={isOpen}>
-  <summary class="cursor-pointer list-none outline-none select-none flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-sm">
-    {@render platformIcon(activePlatform)}
-    <span class="hidden md:inline font-medium">
-      {options.find(o => o.id === activePlatform)?.label}
-    </span>
-    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform {isOpen ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+{#if isOpen}
+  <div class="fixed inset-0 z-30" onclick={() => isOpen = false} role="presentation"></div>
+{/if}
+
+<div class="relative w-full">
+  <button 
+    type="button"
+    class="w-full cursor-pointer select-none flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-xs h-10"
+    onclick={() => isOpen = !isOpen}>
+    <div class="flex items-center gap-2 truncate">
+      {@render platformIcon(activePlatform)}
+      <span class="font-bold text-xs truncate">
+        {options.find(o => o.id === activePlatform)?.label}
+      </span>
+    </div>
+    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 {isOpen ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
     </svg>
-  </summary>
+  </button>
 
-  <div class="absolute right-0 sm:left-0 mt-2 w-44 p-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-30 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
-    {#each options as opt (opt.id)}
-      <button 
-        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors {activePlatform === opt.id ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'}"
-        onclick={() => selectOption(opt.id)}>
-        {@render platformIcon(opt.id)}
-        <span>{opt.label}</span>
-      </button>
-    {/each}
-  </div>
-</details>
+  {#if isOpen}
+    <div class="absolute right-0 mt-1.5 w-full sm:w-44 p-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 z-40 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
+      {#each options as opt (opt.id)}
+        <button 
+          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors {activePlatform === opt.id ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'}"
+          onclick={() => selectOption(opt.id)}>
+          {@render platformIcon(opt.id)}
+          <span>{opt.label}</span>
+        </button>
+      {/each}
+    </div>
+  {/if}
+</div>

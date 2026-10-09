@@ -1,6 +1,8 @@
-import { redirect } from '@sveltejs/kit';
+import registry from '$lib/data/accounts_registry.json';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = () => {
-    throw redirect(303, '/a/berl_view');
+    return {
+        accounts: registry
+    };
 };
