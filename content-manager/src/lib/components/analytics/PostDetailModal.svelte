@@ -33,18 +33,13 @@
   </div>
 
   <div class="fixed z-60 inset-x-0 bottom-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:max-w-4xl lg:max-w-5xl h-[92vh] md:h-[620px] bg-white dark:bg-slate-900 rounded-t-3xl md:rounded-3xl shadow-2xl border-t md:border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-200">
-    
     <div class="md:hidden pt-2.5 pb-1 flex justify-center shrink-0">
       <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
     </div>
 
     <div class="w-full md:w-1/2 lg:w-[54%] bg-slate-950 flex items-center justify-center shrink-0 relative overflow-hidden h-56 sm:h-72 md:h-full border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
       {#if post.thumbnail_url || post.media_url}
-        <img 
-          src={post.thumbnail_url || post.media_url} 
-          alt="Post preview" 
-          class="w-full h-full object-contain" 
-        />
+        <img src={post.thumbnail_url || post.media_url} alt="Post preview" class="w-full h-full object-contain" />
       {:else}
         <div class="text-xs text-slate-500 font-semibold">No Media Preview</div>
       {/if}
@@ -86,23 +81,33 @@
 
       <div class="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-3.5">
         <div class="shrink-0 flex items-center justify-around bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/60 text-center">
-          <div>
-            <div class="text-[11px] text-slate-400 font-medium">Likes</div>
-            <div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.like_count}</div>
-          </div>
+          <div><div class="text-[11px] text-slate-400 font-medium">Likes</div><div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.like_count}</div></div>
           <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-          <div>
-            <div class="text-[11px] text-slate-400 font-medium">Comments</div>
-            <div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.comments_count}</div>
-          </div>
+          <div><div class="text-[11px] text-slate-400 font-medium">Comments</div><div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.comments_count}</div></div>
           {#if typeof post.reach_count === 'number' && post.reach_count > 0}
             <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-            <div>
-              <div class="text-[11px] text-slate-400 font-medium">Reach</div>
-              <div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.reach_count.toLocaleString()}</div>
-            </div>
+            <div><div class="text-[11px] text-slate-400 font-medium">Reach</div><div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.reach_count.toLocaleString()}</div></div>
+          {/if}
+          {#if typeof post.views_count === 'number' && post.views_count > 0}
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+            <div><div class="text-[11px] text-slate-400 font-medium">Views</div><div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.views_count.toLocaleString()}</div></div>
+          {/if}
+          {#if typeof post.shares_count === 'number' && post.shares_count > 0}
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+            <div><div class="text-[11px] text-slate-400 font-medium">Shares</div><div class="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">{post.shares_count.toLocaleString()}</div></div>
           {/if}
         </div>
+
+        {#if post.avg_watch_time || post.clicks_count}
+          <div class="shrink-0 flex items-center justify-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            {#if post.avg_watch_time}
+              <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">Avg Watch: {post.avg_watch_time}s</span>
+            {/if}
+            {#if post.clicks_count}
+              <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">Clicks: {post.clicks_count}</span>
+            {/if}
+          </div>
+        {/if}
 
         {#if post.analysis}
           <div class="shrink-0 p-3.5 {post.platform === 'facebook' ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/40' : 'bg-purple-50/60 dark:bg-purple-950/30 border-purple-100 dark:border-purple-900/40'} rounded-2xl border">

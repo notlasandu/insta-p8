@@ -72,16 +72,7 @@ async function runSync() {
   console.log("Starting Meta Sync with Supabase integration...");
 
   const targetAccount = process.env.TARGET_ACCOUNT || 'copiumbuilder';
-  const dataPath = path.join(process.cwd(), 'src', 'lib', 'data', 'accounts', targetAccount, 'analytics_raw.json');
-  let data = {};
-
-  try {
-    const fileContent = await fs.readFile(dataPath, 'utf-8');
-    data = JSON.parse(fileContent);
-  } catch (e) {
-    console.log("No existing local analytics_raw.json found. Creating in-memory structure.");
-    data = { historical_stats: [] };
-  }
+  let data = { historical_stats: [] };
 
   try {
     // 1. Fetch Instagram Profile Info
@@ -217,6 +208,48 @@ async function runSync() {
       };
     });
 
+    console.log("Fetching insights for Facebook published posts...");
+    const fbMetrics = [
+      'post_total_media_view_unique',
+      'post_media_view',
+      'post_video_views',
+      'post_video_view_time',
+      'post_video_avg_time_watched',
+      'post_video_complete_views_organic',
+      'post_clicks',
+      'post_reactions_by_type_total'
+    ].join(',');
+
+    for (const post of data.facebook_posts) {
+      try {
+        const insightsRes = await fetchFromMeta(`${post.id}/insights`, { metric: fbMetrics });
+        const items = insightsRes.data || [];
+        for (const item of items) {
+          if (item.period && item.period !== 'lifetime') continue;
+          const val = item.values?.[0]?.value;
+          if (item.name === 'post_total_media_view_unique' && val !== undefined) {
+            post.reach_count = val;
+          } else if (item.name === 'post_media_view' && val !== undefined) {
+            post.views_count = val;
+          } else if (item.name === 'post_video_views' && val !== undefined) {
+            post.video_views = val;
+          } else if (item.name === 'post_video_view_time' && val !== undefined) {
+            post.watch_time_ms = val;
+          } else if (item.name === 'post_video_avg_time_watched' && val !== undefined) {
+            post.avg_watch_time = Math.round(val / 1000);
+          } else if (item.name === 'post_video_complete_views_organic' && val !== undefined) {
+            post.complete_views = val;
+          } else if (item.name === 'post_clicks' && val !== undefined) {
+            post.clicks_count = val;
+          } else if (item.name === 'post_reactions_by_type_total' && val !== undefined) {
+            post.reactions_breakdown = val;
+          }
+        }
+      } catch (e) {
+        console.warn(`Failed to fetch insights for FB post ${post.id}:`, e.message);
+      }
+    }
+
     // 8. Upsert into Supabase
     console.log("Upserting daily analytics to Supabase...");
     const { error: dailyErr } = await supabase.rpc('upsert_daily_analytics', {
@@ -256,32 +289,60 @@ async function runSync() {
       console.log("Successfully upserted latest snapshot into Supabase!");
     }
 
-    // 9. Fetch Full Historical Records from Supabase
-    console.log("Fetching full historical series from Supabase...");
-    const { data: dbHistory, error: histErr } = await supabase
-      .from('account_daily_analytics')
-      .select('date, reach, engaged, views, clicks, followers, instagram, facebook, combined')
-      .eq('account_id', targetAccount)
-      .order('date', { ascending: true });
+    // 9. Sync published Instagram & Facebook media into content_posts table
+    console.log("Syncing published Instagram media to content_posts table...");
+    for (const post of data.media_posts) {
+      const firstLine = (post.caption || '').split('\n')[0].trim().slice(0, 100);
+      const title = firstLine || 'Instagram Reel';
+      const { error: postErr } = await supabase.from('content_posts').upsert({
+        id: post.id,
+        account_id: targetAccount,
+        title,
+        status: 'POSTED',
+        scheduled_date: post.timestamp,
+        description: post.caption || '',
+        likes: post.like_count || 0,
+        comments: post.comments_count || 0,
+        shares: 0,
+        thumbnail: post.thumbnail_url || post.media_url || '',
+        metadata: {
+          platform: 'instagram',
+          permalink: post.permalink
+        }
+      }, { onConflict: 'id' });
 
-    if (!histErr && dbHistory && dbHistory.length > 0) {
-      data.historical_stats = dbHistory;
-      console.log(`Loaded ${dbHistory.length} historical day(s) from Supabase.`);
-    } else {
-      const existingIndex = (data.historical_stats || []).findIndex(s => s.date === today);
-      if (existingIndex >= 0) {
-        data.historical_stats[existingIndex] = todayStats;
-      } else {
-        data.historical_stats.push(todayStats);
+      if (postErr) {
+        console.warn(`Warning upserting post ${post.id}:`, postErr.message);
       }
     }
 
-    // 10. Update Local Cache File (if filesystem is writable)
-    try {
-      await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
-      console.log(`Updated local cache at ${dataPath}`);
-    } catch (fsErr) {
-      console.log("Filesystem not writable (expected in serverless/readonly environments).");
+    console.log("Syncing published Facebook posts to content_posts table...");
+    for (const post of data.facebook_posts) {
+      const firstLine = (post.caption || '').split('\n')[0].trim().slice(0, 100);
+      const title = firstLine || (post.media_type === 'VIDEO' ? 'Facebook Video' : 'Facebook Post');
+      const { error: postErr } = await supabase.from('content_posts').upsert({
+        id: post.id,
+        account_id: targetAccount,
+        title,
+        status: 'POSTED',
+        scheduled_date: post.timestamp,
+        description: post.caption || '',
+        likes: post.like_count || 0,
+        comments: post.comments_count || 0,
+        shares: post.shares_count || 0,
+        thumbnail: post.thumbnail_url || post.media_url || '',
+        metadata: {
+          platform: 'facebook',
+          reach: post.reach_count || 0,
+          views: post.views_count || 0,
+          clicks: post.clicks_count || 0,
+          permalink: post.permalink
+        }
+      }, { onConflict: 'id' });
+
+      if (postErr) {
+        console.warn(`Warning upserting FB post ${post.id}:`, postErr.message);
+      }
     }
 
     console.log("Sync completed successfully!");

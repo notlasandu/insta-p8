@@ -35,6 +35,6 @@ jobs:
           ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN || secrets.ACCESS_TOKEN || secrets.IG_ACCESS_TOKEN }}
           IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID || '17841423877461958' }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1353894244476166' }}
-          TARGET_ACCOUNT: 'berl_view'
+          TARGET_ACCOUNT: 'copiumbuilder'
         run: |
           node scripts/sync-instagram.js

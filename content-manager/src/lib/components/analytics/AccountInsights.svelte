@@ -46,7 +46,7 @@
     </div>
 
     <div class="bg-violet-50/70 dark:bg-violet-950/30 rounded-2xl p-4 sm:p-6 border border-violet-100 dark:border-violet-900/40 relative overflow-hidden">
-      <h3 class="text-[11px] sm:text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wider mb-1 sm:mb-2 truncate">Daily Reach</h3>
+      <h3 class="text-[11px] sm:text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wider mb-1 sm:mb-2 truncate">Today's Reach</h3>
       <div class="text-2xl sm:text-4xl font-black text-violet-950 dark:text-violet-100 mb-2 sm:mb-3">{combined.reach.toLocaleString()}</div>
       <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-400 border-t border-violet-100/80 dark:border-violet-900/40 pt-2 flex-wrap">
         <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-pink-500"></span> IG: {todayStats.instagram?.reach || 0}</span>
@@ -55,7 +55,7 @@
     </div>
 
     <div class="bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl p-4 sm:p-6 border border-amber-100 dark:border-amber-900/40 relative overflow-hidden">
-      <h3 class="text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider mb-1 sm:mb-2 truncate">Daily Engaged</h3>
+      <h3 class="text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider mb-1 sm:mb-2 truncate">Today's Engaged</h3>
       <div class="text-2xl sm:text-4xl font-black text-amber-950 dark:text-amber-100 mb-2 sm:mb-3">{combined.engaged.toLocaleString()}</div>
       <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-400 border-t border-amber-100/80 dark:border-indigo-900/40 pt-2 flex-wrap">
         <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-pink-500"></span> IG: {todayStats.instagram?.engaged || 0}</span>
@@ -64,7 +64,7 @@
     </div>
 
     <div class="bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl p-4 sm:p-6 border border-emerald-100 dark:border-emerald-900/40 relative overflow-hidden">
-      <h3 class="text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-1 sm:mb-2 truncate">Daily Visits / Views</h3>
+      <h3 class="text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-1 sm:mb-2 truncate">Today's Views</h3>
       <div class="text-2xl sm:text-4xl font-black text-emerald-950 dark:text-emerald-100 mb-2 sm:mb-3">{combined.views.toLocaleString()}</div>
       <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-400 border-t border-emerald-100/80 dark:border-emerald-900/40 pt-2 flex-wrap">
         <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-pink-500"></span> IG: {todayStats.instagram?.views || 0}</span>
