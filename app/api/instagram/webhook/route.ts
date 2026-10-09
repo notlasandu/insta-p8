@@ -734,13 +734,13 @@ export async function POST(request: NextRequest) {
                         // Quick reply payloads can also match keyword rules
                         if (!match) {
                           match = dmAutomations.find(
-                            (a) => a.trigger_type === "keyword" && keywordMatches(a.trigger_value, triggerValue.toLowerCase()),
+                            (a) => a.trigger_type === "keyword" && (a.trigger_value === "ALL" || keywordMatches(a.trigger_value, triggerValue.toLowerCase())),
                           )
                         }
                       }
                     } else {
                       match = dmAutomations.find(
-                        (a) => a.trigger_type === "keyword" && keywordMatches(a.trigger_value, triggerValue),
+                        (a) => a.trigger_type === "keyword" && (a.trigger_value === "ALL" || keywordMatches(a.trigger_value, triggerValue)),
                       )
                     }
 
