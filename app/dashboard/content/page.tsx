@@ -38,7 +38,7 @@ export default function ContentStudioPage() {
       <iframe
         key={resolvedTheme}
         ref={iframeRef}
-        src={`${contentBaseUrl}/a/berl_view?theme=${resolvedTheme}`}
+        src={`${contentBaseUrl}/a/berl_view?theme=${resolvedTheme}&embedded=true`}
         title="Content Manager Studio"
         onLoad={handleIframeLoad}
         className="h-full w-full border-0 outline-none"
