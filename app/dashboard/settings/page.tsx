@@ -62,9 +62,30 @@ export default function SettingsPage() {
                     </label>
                 ))}
             </div>
+            <div className="mt-7 rounded-xl border border-border bg-card p-6">
+                <div className="border-b border-border pb-4 mb-5">
+                    <h2 className="text-base font-semibold text-foreground">Follower Gate Settings</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Default greeting sent to non-followers when they trigger an automation requiring them to follow. They will receive this message with a Follow link and a &quot;Following&quot; verification button.
+                    </p>
+                </div>
+                <label className="block space-y-2">
+                    <span className="text-sm font-medium text-foreground">Default non-follower greeting message</span>
+                    <textarea
+                        value={knowledge["default_follow_gate_message"] ?? ""}
+                        onChange={(event) => update("default_follow_gate_message", event.target.value)}
+                        placeholder="e.g. Thanks for reaching out! It looks like you're not following yet. Go ahead and follow our page, then tap 'Following' below to unlock!"
+                        rows={3}
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Can be overridden per automation rule in the automation editor.
+                    </p>
+                </label>
+            </div>
             <button onClick={save} disabled={saving} className="mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-60">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                {saved ? "Saved" : "Save business knowledge"}
+                {saved ? "Saved" : "Save preferences"}
             </button>
         </div>
     )

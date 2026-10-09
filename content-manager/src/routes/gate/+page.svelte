@@ -25,7 +25,13 @@
       const data = await res.json();
 
       if (res.ok && data.success) {
-        goto(redirectPath);
+        if (data.token) {
+          const target = new URL(redirectPath, window.location.origin);
+          target.searchParams.set('gate_token', data.token);
+          window.location.href = target.toString();
+        } else {
+          window.location.href = redirectPath;
+        }
       } else {
         error = data.error || 'Incorrect passcode';
       }

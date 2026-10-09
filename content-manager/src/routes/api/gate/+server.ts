@@ -14,13 +14,13 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
     cookies.set('dashboard_gate_session', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       path: '/',
       maxAge: 60 * 60 * 24 * 30
     });
 
-    return json({ success: true });
+    return json({ success: true, token });
   } catch {
     return json({ error: 'Internal server error' }, { status: 500 });
   }

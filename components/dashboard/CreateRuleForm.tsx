@@ -61,6 +61,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   /* ---------- EXTRAS ---------- */
   const [name, setName] = useState("")
   const [checkFollow, setCheckFollow] = useState(false)
+  const [followGateMessage, setFollowGateMessage] = useState("")
   const [delaySeconds, setDelaySeconds] = useState(0)
   const [typingIndicator, setTypingIndicator] = useState(false)
 
@@ -114,6 +115,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
     setPublicReplies(content.public_replies || [])
     setIncludeReplies(content.include_replies === true)
     setCheckFollow(content.check_follow === true)
+    setFollowGateMessage(content.follow_gate_message || "")
     setDelaySeconds(Number(content.delay_seconds) || 0)
     setTypingIndicator(content.typing_indicator === true)
     
@@ -198,6 +200,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
     const isReplyAll = triggerSource === "comment" && triggers.length === 0
 
     const content: any = { check_follow: checkFollow }
+    if (checkFollow && followGateMessage.trim()) content.follow_gate_message = followGateMessage.trim()
     if (delaySeconds > 0) content.delay_seconds = delaySeconds
     if (typingIndicator) content.typing_indicator = true
     if (triggerSource === "comment") {
@@ -691,6 +694,23 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
               <div className="space-y-4">
                 <FieldLabel>Delivery options</FieldLabel>
                 <ToggleRow icon={<Lock className="w-5 h-5" />} title="Follow gate required" sub="Only followers get the payload. Non-followers get follow prompt first." on={checkFollow} onToggle={() => setCheckFollow(!checkFollow)} />
+                {checkFollow && (
+                  <div className="ml-2 sm:ml-12 space-y-2 rounded-xl border border-border/70 bg-card/60 p-3.5">
+                    <label className="block space-y-1">
+                      <span className="text-xs font-medium text-foreground">Custom non-follower greeting <span className="text-muted-foreground font-normal">(optional)</span></span>
+                      <textarea
+                        value={followGateMessage}
+                        onChange={(e) => setFollowGateMessage(e.target.value)}
+                        placeholder="Leave blank to use default greeting from Preferences..."
+                        rows={2}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Sent to non-followers with a link to follow and a &quot;Following&quot; verification button.
+                    </p>
+                  </div>
+                )}
                 <ToggleRow icon={<Eye className="w-5 h-5" />} title="Mimic active typing status" sub="Displays typing bubble indicators to look completely organic." on={typingIndicator} onToggle={() => setTypingIndicator(!typingIndicator)} />
                 
                 <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-white/[0.01]">

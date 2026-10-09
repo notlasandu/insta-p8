@@ -78,13 +78,28 @@ export function buildFollowGateCard(params: {
   ruleId: string
   title?: string
   subtitle?: string
+  platform?: 'ig' | 'fb'
+  pageId?: string
 }): IGCard {
+  const isFb = params.platform === 'fb'
+  const followUrl = isFb
+    ? (params.pageId ? `https://facebook.com/${params.pageId}` : `https://facebook.com/${params.username}`)
+    : `https://instagram.com/${params.username}`
+
+  const defaultTitle = isFb ? "Follow our page to unlock" : "Follow to unlock"
+  const defaultSubtitle = isFb
+    ? "Follow our Facebook page, then tap Following below!"
+    : `Follow @${params.username}, then tap Following below!`
+
+  const title = (params.title ?? defaultTitle).slice(0, 80)
+  const subtitle = (params.subtitle ?? defaultSubtitle).slice(0, 80)
+
   return {
-    title: params.title ?? "Before you lose me",
-    subtitle: params.subtitle ?? `Follow @${params.username} to unlock this content!`,
+    title,
+    subtitle,
     buttons: [
-      { type: "web_url", url: `https://instagram.com/${params.username}`, title: "Follow" },
-      { type: "postback", title: "I Followed! ✅", payload: `UNLOCK_CONTENT_${params.ruleId}` },
+      { type: "web_url", url: followUrl, title: "Follow" },
+      { type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${params.ruleId}` },
     ],
   }
 }
