@@ -62,6 +62,8 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   const [name, setName] = useState("")
   const [checkFollow, setCheckFollow] = useState(false)
   const [followGateMessage, setFollowGateMessage] = useState("")
+  const [optInMessage, setOptInMessage] = useState("")
+  const [optInButton, setOptInButton] = useState("")
   const [delaySeconds, setDelaySeconds] = useState(0)
   const [typingIndicator, setTypingIndicator] = useState(false)
 
@@ -116,6 +118,8 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
     setIncludeReplies(content.include_replies === true)
     setCheckFollow(content.check_follow === true)
     setFollowGateMessage(content.follow_gate_message || "")
+    setOptInMessage(content.opt_in_message || "")
+    setOptInButton(content.opt_in_button || "")
     setDelaySeconds(Number(content.delay_seconds) || 0)
     setTypingIndicator(content.typing_indicator === true)
     
@@ -201,6 +205,8 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
 
     const content: any = { check_follow: checkFollow }
     if (checkFollow && followGateMessage.trim()) content.follow_gate_message = followGateMessage.trim()
+    if (optInMessage.trim()) content.opt_in_message = optInMessage.trim()
+    if (optInButton.trim()) content.opt_in_button = optInButton.trim()
     if (delaySeconds > 0) content.delay_seconds = delaySeconds
     if (typingIndicator) content.typing_indicator = true
     if (triggerSource === "comment") {
@@ -695,9 +701,40 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
                 <FieldLabel>Delivery options</FieldLabel>
                 <ToggleRow icon={<Lock className="w-5 h-5" />} title="Follow gate required" sub="Only followers get the payload. Non-followers get follow prompt first." on={checkFollow} onToggle={() => setCheckFollow(!checkFollow)} />
                 {checkFollow && (
-                  <div className="ml-2 sm:ml-12 space-y-2 rounded-xl border border-border/70 bg-card/60 p-3.5">
+                  <div className="ml-2 sm:ml-12 space-y-3 rounded-xl border border-border/70 bg-card/60 p-3.5">
+                    {triggerSource === "comment" && (
+                      <div className="space-y-3 pb-3 border-b border-border/50">
+                        <div>
+                          <p className="text-xs font-semibold text-foreground">Comment Opt-In (&quot;Send me the guide&quot;)</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Initial message and button sent privately to commenters to prompt them to claim the content.
+                          </p>
+                        </div>
+                        <label className="block space-y-1">
+                          <span className="text-xs font-medium text-foreground">Custom opt-in message <span className="text-muted-foreground font-normal">(optional)</span></span>
+                          <textarea
+                            value={optInMessage}
+                            onChange={(e) => setOptInMessage(e.target.value)}
+                            placeholder="Leave blank to use default opt-in message from Preferences..."
+                            rows={2}
+                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                        </label>
+                        <label className="block space-y-1">
+                          <span className="text-xs font-medium text-foreground">Button label <span className="text-muted-foreground font-normal">(optional, max 20 chars)</span></span>
+                          <input
+                            type="text"
+                            maxLength={20}
+                            value={optInButton}
+                            onChange={(e) => setOptInButton(e.target.value)}
+                            placeholder='e.g. "Send me the guide"'
+                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                        </label>
+                      </div>
+                    )}
                     <label className="block space-y-1">
-                      <span className="text-xs font-medium text-foreground">Custom non-follower greeting <span className="text-muted-foreground font-normal">(optional)</span></span>
+                      <span className="text-xs font-medium text-foreground">Custom follower gate message <span className="text-muted-foreground font-normal">(optional)</span></span>
                       <textarea
                         value={followGateMessage}
                         onChange={(e) => setFollowGateMessage(e.target.value)}
@@ -707,7 +744,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
                       />
                     </label>
                     <p className="text-[11px] text-muted-foreground">
-                      Sent to non-followers with a link to follow and a &quot;Following&quot; verification button.
+                      Sent with a &quot;Following&quot; verification button before unlocking content.
                     </p>
                   </div>
                 )}

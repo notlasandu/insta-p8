@@ -33,6 +33,8 @@ export interface ResponseContent {
   quick_replies?: { title: string; payload?: string }[]
   check_follow?: boolean
   follow_gate_message?: string
+  opt_in_message?: string
+  opt_in_button?: string
   // Comment automation options
   reply_mode?: "both" | "dm_only" | "public_only"
   public_replies?: string[]

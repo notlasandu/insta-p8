@@ -64,17 +64,55 @@ export default function SettingsPage() {
             </div>
             <div className="mt-7 rounded-xl border border-border bg-card p-6">
                 <div className="border-b border-border pb-4 mb-5">
+                    <h2 className="text-base font-semibold text-foreground">Comment Opt-In Settings</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Initial message and button sent privately to commenters to prompt them to claim the content.
+                    </p>
+                </div>
+                <div className="space-y-4">
+                    <label className="block space-y-2">
+                        <span className="text-sm font-medium text-foreground">Default opt-in message</span>
+                        <textarea
+                            value={knowledge["default_opt_in_message"] ?? ""}
+                            onChange={(event) => update("default_opt_in_message", event.target.value)}
+                            placeholder="e.g. Hey! 👋 Here's the guide: every step with evidence and copy-paste setup. Tap below and I'll send it 👇"
+                            rows={3}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Can be overridden per automation rule in the automation editor.
+                        </p>
+                    </label>
+                    <label className="block space-y-2">
+                        <span className="text-sm font-medium text-foreground">Default button label</span>
+                        <input
+                            type="text"
+                            maxLength={20}
+                            value={knowledge["default_opt_in_button"] ?? ""}
+                            onChange={(event) => update("default_opt_in_button", event.target.value)}
+                            placeholder="e.g. Send me the guide"
+                            className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Max 20 characters (enforced by Instagram). Default is &quot;Send me the guide&quot;.
+                        </p>
+                    </label>
+                </div>
+            </div>
+
+            <div className="mt-7 rounded-xl border border-border bg-card p-6">
+                <div className="border-b border-border pb-4 mb-5">
                     <h2 className="text-base font-semibold text-foreground">Follower Gate Settings</h2>
                     <p className="mt-1 text-xs text-muted-foreground">
-                        Default greeting sent to non-followers when they trigger an automation requiring them to follow. They will receive this message with a Follow link and a &quot;Following&quot; verification button.
+                        Message sent when an automation requires users to follow. Sent with a &quot;Following&quot; button before unlocking content.
                     </p>
                 </div>
                 <label className="block space-y-2">
-                    <span className="text-sm font-medium text-foreground">Default non-follower greeting message</span>
+                    <span className="text-sm font-medium text-foreground">Default follower gate message</span>
                     <textarea
                         value={knowledge["default_follow_gate_message"] ?? ""}
                         onChange={(event) => update("default_follow_gate_message", event.target.value)}
-                        placeholder="e.g. Thanks for reaching out! It looks like you're not following yet. Go ahead and follow our page, then tap 'Following' below to unlock!"
+                        placeholder="e.g. Almost there! The guide is for followers 🙌 Follow our page, then tap the button below 👇"
                         rows={3}
                         className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />

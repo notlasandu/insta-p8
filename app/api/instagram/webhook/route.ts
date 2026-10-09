@@ -7,6 +7,7 @@ import { ensureSchema } from "@/lib/supabase-migrate"
 import {
   sendTextDM,
   sendCardDM,
+  sendButtonTemplateDM,
   sendMediaDM,
   sendSenderAction,
   replyToComment,
@@ -168,6 +169,36 @@ async function verifyFollowStatus(
   }
 }
 
+function resolveOptInMessage(
+  ruleMessage?: string,
+  ruleButton?: string,
+  userAiContext?: string,
+  workflowName?: string,
+): { text: string; buttonTitle: string } {
+  let text = ruleMessage?.trim()
+  let buttonTitle = ruleButton?.trim()
+  if (userAiContext) {
+    try {
+      const parsed = JSON.parse(userAiContext)
+      if (!text && parsed.default_opt_in_message?.trim()) {
+        text = parsed.default_opt_in_message.trim()
+      }
+      if (!buttonTitle && parsed.default_opt_in_button?.trim()) {
+        buttonTitle = parsed.default_opt_in_button.trim()
+      }
+    } catch {}
+  }
+  if (!text) {
+    text = workflowName
+      ? `Hey! 👋 Here's ${workflowName}. Tap below and I'll send it 👇`
+      : "Hey! 👋 Here's the guide: tap below and I'll send it 👇"
+  }
+  if (!buttonTitle) {
+    buttonTitle = "Send me the guide"
+  }
+  return { text, buttonTitle: buttonTitle.slice(0, 20) }
+}
+
 function resolveFollowGreeting(
   ruleMessage?: string,
   userAiContext?: string,
@@ -185,8 +216,8 @@ function resolveFollowGreeting(
   }
   if (!raw) {
     raw = platform === 'fb'
-      ? "Thanks for reaching out! It looks like you aren't following our page yet. Go ahead and follow, then tap 'Following' below to unlock!"
-      : `Thanks for reaching out! It looks like you aren't following @${username || "us"} yet. Go ahead and follow, then tap 'Following' below to unlock!`
+      ? "Almost there! The guide is for followers 🙌 Follow our page, then tap the button below 👇"
+      : `Almost there! The guide is for followers 🙌 Follow @${username || "us"}, then tap the button below 👇`
   }
   if (username) {
     raw = raw.replace(/{username}/g, username)
@@ -403,61 +434,41 @@ export async function POST(request: NextRequest) {
                       return pickRandom(pool)
                     }
 
-                    // ===== FOLLOWER GATE FOR COMMENTS =====
-                    // The gate card is delivered as a *private reply* to the comment. recipient.id
-                    // alone won't open a DM with someone who has never messaged the account; private
-                    // replies to a comment need comment_id.
-                      if (content.check_follow === true) {
-                        const followResult = await verifyFollowStatus(senderId, user.access_token, platform)
+                    // ===== COMMENT AUTOMATION (MANYCHAT PATTERN) =====
+                    // Step 1: Public reply (if enabled)
+                    if (replyMode !== "dm_only") {
+                      await replyToComment(user.access_token, commentId, getPublicReply(), platform)
+                    }
 
-                        if (followResult.follows === true) {
-                          console.log(`[webhook] ✅ Comment follower gate: @${senderId} follows @${user.username} — sending content`)
-                          if (replyMode !== "dm_only") {
-                            await replyToComment(user.access_token, commentId, getPublicReply(), platform)
-                          }
-                          if (replyMode !== "public_only") {
-                            await sendAutomationResponse(
-                              user.access_token,
-                              { comment_id: commentId },
-                              content,
-                              { skipTyping: true, platform },
-                            )
-                          }
-                        } else {
-                          console.log(`[webhook] 🔒 Comment follower gate: @${senderId} not verified following @${user.username} — sending gate greeting`)
-                          if (replyMode !== "dm_only") {
-                            await replyToComment(user.access_token, commentId, getPublicReply(), platform)
-                          }
-                          if (replyMode !== "public_only") {
-                            const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, platform)
-                            await sendCardDM(
-                              user.access_token,
-                              { comment_id: commentId },
-                              buildFollowGateCard({
-                                username: user.username,
-                                ruleId: match.id,
-                                title: greeting.title,
-                                subtitle: greeting.subtitle,
-                                platform,
-                                pageId: user.page_id,
-                              }),
-                              platform,
-                            )
-                            await bumpUnlockAttempt(unlockKey(senderId, match.id))
-                          }
-                        }
-                      } else {
-                      // No follower check required — send normally
-                      if (replyMode !== "dm_only") {
-                        await replyToComment(user.access_token, commentId, getPublicReply(), platform)
-                      }
-                      if (replyMode !== "public_only") {
-                        await sendAutomationResponse(
+                    // Step 2: Private reply to comment
+                    if (replyMode !== "public_only") {
+                      if (content.check_follow === true) {
+                        const optIn = resolveOptInMessage(content.opt_in_message, content.opt_in_button, user.ai_context, match.name)
+                        console.log(`[webhook] 📩 Sending comment opt-in prompt to @${senderId} for rule "${match.name}"`)
+                        
+                        const btnResult = await sendButtonTemplateDM(
                           user.access_token,
                           { comment_id: commentId },
-                          content,
-                          { skipTyping: true, platform },
+                          optIn.text,
+                          [{ type: "postback", title: optIn.buttonTitle, payload: `CLAIM_CONTENT_${match.id}` }],
+                          platform,
                         )
+                        if (!btnResult.ok) {
+                          await sendCardDM(
+                            user.access_token,
+                            { comment_id: commentId },
+                            {
+                              title: optIn.text.slice(0, 80),
+                              subtitle: optIn.text.length > 80 ? optIn.text.slice(80, 160) : undefined,
+                              buttons: [{ type: "postback", title: optIn.buttonTitle, payload: `CLAIM_CONTENT_${match.id}` }],
+                            },
+                            platform,
+                          )
+                        }
+                        await bumpUnlockAttempt(unlockKey(senderId, match.id))
+                      } else {
+                        console.log(`[webhook] ✅ Follower gate not required: delivering content directly for comment by @${senderId} on rule "${match.name}"`)
+                        await sendAutomationResponse(user.access_token, { comment_id: commentId }, content, { platform })
                       }
                     }
         }
@@ -519,14 +530,16 @@ export async function POST(request: NextRequest) {
                                           const content = parseContent(match.response_content)
 
                                           if (content.check_follow === true) {
-                                            const followResult = await verifyFollowStatus(senderId, user.access_token, 'ig')
-
-                                            if (followResult.follows === true) {
-                                              console.log(`[webhook] ✅ Story follower gate: @${senderId} follows @${user.username} — sending content`)
-                                              await sendAutomationResponse(user.access_token, { id: senderId }, content)
-                                            } else {
-                                              console.log(`[webhook] 🔒 Story follower gate: @${senderId} not verified following @${user.username}`)
-                                              const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, 'ig')
+                                            console.log(`[webhook] 🔒 Story follower gate: @${senderId} — sending gate prompt`)
+                                            const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, 'ig')
+                                            const btnRes = await sendButtonTemplateDM(
+                                              user.access_token,
+                                              { id: senderId },
+                                              greeting.fullText,
+                                              [{ type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${match.id}` }],
+                                              'ig',
+                                            )
+                                            if (!btnRes.ok) {
                                               await sendCardDM(
                                                 user.access_token,
                                                 { id: senderId },
@@ -539,8 +552,8 @@ export async function POST(request: NextRequest) {
                                                 }),
                                                 'ig',
                                               )
-                                              await bumpUnlockAttempt(unlockKey(senderId, match.id))
                                             }
+                                            await bumpUnlockAttempt(unlockKey(senderId, match.id))
                                           } else {
                                             // No follower check required — send normally
                                             await sendAutomationResponse(user.access_token, { id: senderId }, content)
@@ -647,35 +660,62 @@ export async function POST(request: NextRequest) {
                     const dmAutomations = automations.filter((a: any) => a.trigger_source === "dm" || !a.trigger_source)
                     let match = null
 
+                    let isClaimEvent = triggerType === "postback" && triggerValue.startsWith("CLAIM_CONTENT_")
                     let isUnlockEvent = triggerType === "postback" && triggerValue.startsWith("UNLOCK_CONTENT_")
 
-                    if (!isUnlockEvent && triggerType === "keyword" && ["following", "i followed", "followed", "i am following", "already followed"].includes(triggerValue)) {
-                      const { data: attempts } = await supabase
-                        .from("unlock_attempts")
-                        .select("key")
-                        .like("key", `${senderId}::%`)
-                        .order("updated_at", { ascending: false })
-                        .limit(1)
+                    if (!isClaimEvent && !isUnlockEvent && triggerType === "keyword") {
+                      const normVal = triggerValue.toLowerCase().trim()
+                      if (["send me the guide", "send the guide", "send guide", "send it", "claim"].some(k => normVal.includes(k))) {
+                        const { data: attempts } = await supabase
+                          .from("unlock_attempts")
+                          .select("key")
+                          .like("key", `${senderId}::%`)
+                          .order("updated_at", { ascending: false })
+                          .limit(1)
 
-                      let pendingRuleId = attempts?.[0]?.key?.split("::")?.[1]
-                      if (pendingRuleId) {
-                        match = automations.find((a: any) => a.id === pendingRuleId)
-                      }
-                      if (!match) {
-                        match = automations.find((a: any) => {
-                          const c = parseContent(a.response_content)
-                          return c.check_follow === true
-                        })
-                      }
-                      if (match) {
-                        isUnlockEvent = true
-                        triggerType = "postback"
-                        triggerValue = `UNLOCK_CONTENT_${match.id}`
+                        let pendingRuleId = attempts?.[0]?.key?.split("::")?.[1]
+                        if (pendingRuleId) {
+                          match = automations.find((a: any) => a.id === pendingRuleId)
+                        }
+                        if (!match) {
+                          match = automations.find((a: any) => a.trigger_source === "comment") || automations[0]
+                        }
+                        if (match) {
+                          isClaimEvent = true
+                          triggerType = "postback"
+                          triggerValue = `CLAIM_CONTENT_${match.id}`
+                        }
+                      } else if (["following", "i followed", "followed", "i am following", "already followed"].some(k => normVal.includes(k))) {
+                        const { data: attempts } = await supabase
+                          .from("unlock_attempts")
+                          .select("key")
+                          .like("key", `${senderId}::%`)
+                          .order("updated_at", { ascending: false })
+                          .limit(1)
+
+                        let pendingRuleId = attempts?.[0]?.key?.split("::")?.[1]
+                        if (pendingRuleId) {
+                          match = automations.find((a: any) => a.id === pendingRuleId)
+                        }
+                        if (!match) {
+                          match = automations.find((a: any) => {
+                            const c = parseContent(a.response_content)
+                            return c.check_follow === true
+                          })
+                        }
+                        if (match) {
+                          isUnlockEvent = true
+                          triggerType = "postback"
+                          triggerValue = `UNLOCK_CONTENT_${match.id}`
+                        }
                       }
                     }
 
                     if (triggerType === "postback") {
-                      if (isUnlockEvent) {
+                      if (isClaimEvent) {
+                        const ruleId = triggerValue.replace("CLAIM_CONTENT_", "")
+                        match = automations.find((a) => a.id === ruleId)
+                      } else if (isUnlockEvent) {
                         const ruleId = triggerValue.replace("UNLOCK_CONTENT_", "")
                         match = automations.find((a) => a.id === ruleId)
                       } else if (triggerValue.startsWith("ICE_BREAKER_")) {
@@ -760,111 +800,19 @@ export async function POST(request: NextRequest) {
                     const attemptKey = unlockKey(senderId, match.id)
                     const currentPlatform: 'ig' | 'fb' = isFb ? 'fb' : 'ig'
 
-                    if (content.check_follow === true) {
-                      if (isUnlockEvent) {
-                        if (isFb) {
-                          // Facebook confirmation: user tapped "Following" button or confirmed in Messenger
-                          await clearUnlockAttempts(attemptKey)
-                          console.log(`[webhook] ✅ Facebook unlock confirmed for @${senderId} — delivering content`)
-                          const result = await sendAutomationResponse(user.access_token, { id: senderId }, content, { platform: 'fb' })
-                          const conv = await incomingSaved
-                          if (result?.ok && conv) {
-                            try {
-                              await supabase.from("messages").insert({
-                                id: `mid_reply_${Date.now()}_${Math.random()}`,
-                                conversation_id: conv.id,
-                                user_id: user.id,
-                                sender_id: user.page_id || user.id,
-                                sender_username: user.username,
-                                content: responsePreviewText(content),
-                                is_from_instagram: false,
-                              })
-                            } catch (e) {
-                              console.error("[webhook] Failed to save outgoing message", e)
-                            }
-                          }
-                        } else {
-                          // Instagram: verify live follow status via Graph API
-                          const followResult = await verifyFollowStatus(senderId, user.access_token, 'ig')
-
-                          if (followResult.follows === true) {
-                            await clearUnlockAttempts(attemptKey)
-                            console.log(`[webhook] ✅ Instagram DM unlock verified for @${senderId} — delivering content`)
-                            const result = await sendAutomationResponse(user.access_token, { id: senderId }, content, { platform: 'ig' })
-                            const conv = await incomingSaved
-                            if (result?.ok && conv) {
-                              try {
-                                await supabase.from("messages").insert({
-                                  id: `mid_reply_${Date.now()}_${Math.random()}`,
-                                  conversation_id: conv.id,
-                                  user_id: user.id,
-                                  sender_id: user.business_account_id,
-                                  sender_username: user.username,
-                                  content: responsePreviewText(content),
-                                  is_from_instagram: true,
-                                })
-                              } catch (e) {
-                                console.error("[webhook] Failed to save outgoing message", e)
-                              }
-                            }
-                          } else {
-                            // Still not following: keep them in the interactive verification loop
-                            console.log(`[webhook] ❌ Instagram DM unlock: @${senderId} still not following @${user.username} — sending retry gate`)
-                            await bumpUnlockAttempt(attemptKey)
-                            const retryCard = buildFollowGateCard({
-                              username: user.username,
-                              ruleId: match.id,
-                              title: "❌ Not following yet!",
-                              subtitle: `Please follow @${user.username} and tap 'Following' below to unlock.`,
-                              platform: 'ig',
-                            })
-                            const result = await sendCardDM(user.access_token, { id: senderId }, retryCard, 'ig')
-                            const conv = await incomingSaved
-                            if (result?.ok && conv) {
-                              try {
-                                await supabase.from("messages").insert({
-                                  id: `mid_reply_${Date.now()}_${Math.random()}`,
-                                  conversation_id: conv.id,
-                                  user_id: user.id,
-                                  sender_id: user.business_account_id,
-                                  sender_username: user.username,
-                                  content: "[Verification Retry — Not Following]",
-                                  is_from_instagram: true,
-                                })
-                              } catch (e) {
-                                console.error("[webhook] Failed to save outgoing message", e)
-                              }
-                            }
-                          }
-                        }
-                      } else {
-                        // Initial keyword/trigger in DM (not the unlock event)
-                        const followResult = await verifyFollowStatus(senderId, user.access_token, currentPlatform)
-
-                        if (followResult.follows === true) {
-                          await clearUnlockAttempts(attemptKey)
-                          console.log(`[webhook] ✅ DM follower gate: @${senderId} follows @${user.username} — sending content`)
-                          const result = await sendAutomationResponse(user.access_token, { id: senderId }, content, { platform: currentPlatform })
-                          const conv = await incomingSaved
-                          if (result?.ok && conv) {
-                            try {
-                              await supabase.from("messages").insert({
-                                id: `mid_reply_${Date.now()}_${Math.random()}`,
-                                conversation_id: conv.id,
-                                user_id: user.id,
-                                sender_id: isFb ? user.page_id : user.business_account_id,
-                                sender_username: user.username,
-                                content: responsePreviewText(content),
-                                is_from_instagram: !isFb,
-                              })
-                            } catch (e) {
-                              console.error("[webhook] Failed to save outgoing message", e)
-                            }
-                          }
-                        } else {
-                          console.log(`[webhook] 🔒 DM follower gate: @${senderId} not verified following @${user.username} — sending gate card`)
-                          const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, currentPlatform)
-                          const result = await sendCardDM(
+                    if (isClaimEvent) {
+                      console.log(`[webhook] 📩 Claim event from @${senderId} for rule "${match.name}"`)
+                      if (content.check_follow === true) {
+                        const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, currentPlatform)
+                        const btnRes = await sendButtonTemplateDM(
+                          user.access_token,
+                          { id: senderId },
+                          greeting.fullText,
+                          [{ type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${match.id}` }],
+                          currentPlatform,
+                        )
+                        if (!btnRes.ok) {
+                          await sendCardDM(
                             user.access_token,
                             { id: senderId },
                             buildFollowGateCard({
@@ -877,24 +825,105 @@ export async function POST(request: NextRequest) {
                             }),
                             currentPlatform,
                           )
-                          await bumpUnlockAttempt(attemptKey)
-                          const conv = await incomingSaved
-                          if (result?.ok && conv) {
-                            try {
-                              await supabase.from("messages").insert({
-                                id: `mid_reply_${Date.now()}_${Math.random()}`,
-                                conversation_id: conv.id,
-                                user_id: user.id,
-                                sender_id: isFb ? user.page_id : user.business_account_id,
-                                sender_username: user.username,
-                                content: "[Follower Gate Greeting Sent]",
-                                is_from_instagram: !isFb,
-                              })
-                            } catch (e) {
-                              console.error("[webhook] Failed to save outgoing message", e)
-                            }
-                          }
                         }
+                        await bumpUnlockAttempt(attemptKey)
+                        const conv = await incomingSaved
+                        if (conv) {
+                          try {
+                            await supabase.from("messages").insert({
+                              id: `mid_reply_${Date.now()}_${Math.random()}`,
+                              conversation_id: conv.id,
+                              user_id: user.id,
+                              sender_id: isFb ? user.page_id : user.business_account_id,
+                              sender_username: user.username,
+                              content: greeting.fullText,
+                              is_from_instagram: !isFb,
+                            })
+                          } catch (e) {}
+                        }
+                        continue
+                      } else {
+                        await clearUnlockAttempts(attemptKey)
+                        console.log(`[webhook] ✅ Content claimed by @${senderId} on rule "${match.name}" — delivering content`)
+                        const result = await sendAutomationResponse(user.access_token, { id: senderId }, content, { platform: currentPlatform })
+                        const conv = await incomingSaved
+                        if (result?.ok && conv) {
+                          try {
+                            await supabase.from("messages").insert({
+                              id: `mid_reply_${Date.now()}_${Math.random()}`,
+                              conversation_id: conv.id,
+                              user_id: user.id,
+                              sender_id: isFb ? user.page_id : user.business_account_id,
+                              sender_username: user.username,
+                              content: responsePreviewText(content),
+                              is_from_instagram: !isFb,
+                            })
+                          } catch (e) {}
+                        }
+                        continue
+                      }
+                    }
+
+                    if (isUnlockEvent) {
+                      await clearUnlockAttempts(attemptKey)
+                      console.log(`[webhook] ✅ Follow confirmed: delivering unlocked content to @${senderId} for rule "${match.name}"`)
+                      const result = await sendAutomationResponse(user.access_token, { id: senderId }, content, { platform: currentPlatform })
+                      const conv = await incomingSaved
+                      if (result?.ok && conv) {
+                        try {
+                          await supabase.from("messages").insert({
+                            id: `mid_reply_${Date.now()}_${Math.random()}`,
+                            conversation_id: conv.id,
+                            user_id: user.id,
+                            sender_id: isFb ? user.page_id : user.business_account_id,
+                            sender_username: user.username,
+                            content: responsePreviewText(content),
+                            is_from_instagram: !isFb,
+                          })
+                        } catch (e) {}
+                      }
+                      continue
+                    }
+
+                    if (content.check_follow === true) {
+                      console.log(`[webhook] 🔒 DM follower gate: @${senderId} — sending gate prompt`)
+                      const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, currentPlatform)
+                      const btnRes = await sendButtonTemplateDM(
+                        user.access_token,
+                        { id: senderId },
+                        greeting.fullText,
+                        [{ type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${match.id}` }],
+                        currentPlatform,
+                      )
+                      if (!btnRes.ok) {
+                        await sendCardDM(
+                          user.access_token,
+                          { id: senderId },
+                          buildFollowGateCard({
+                            username: user.username,
+                            ruleId: match.id,
+                            title: greeting.title,
+                            subtitle: greeting.subtitle,
+                            platform: currentPlatform,
+                            pageId: user.page_id,
+                          }),
+                          currentPlatform,
+                        )
+                      }
+                      await bumpUnlockAttempt(attemptKey)
+                      const conv = await incomingSaved
+                      if (btnRes?.ok && conv) {
+                        try {
+                          await supabase.from("messages").insert({
+                            id: `mid_reply_${Date.now()}_${Math.random()}`,
+                            conversation_id: conv.id,
+                            user_id: user.id,
+                            sender_id: isFb ? user.page_id : user.business_account_id,
+                            sender_username: user.username,
+                            content: greeting.fullText,
+                            is_from_instagram: !isFb,
+                          })
+                        } catch (e) {}
                       }
                     } else {
                       // No follower check required

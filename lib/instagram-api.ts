@@ -67,6 +67,28 @@ export function buildCardAttachment(card: IGCard) {
   }
 }
 
+export function buildButtonTemplateAttachment(text: string, buttons: IGButton[]) {
+  const formattedButtons = (buttons || [])
+    .filter((b) => b.title)
+    .slice(0, 3)
+    .map((b) => ({
+      type: b.type,
+      title: b.title.slice(0, 20),
+      url: b.type === "web_url" ? b.url : undefined,
+      payload: b.type === "postback" ? b.payload : undefined,
+    }))
+  return {
+    attachment: {
+      type: "template",
+      payload: {
+        template_type: "button",
+        text: text.slice(0, 1000),
+        buttons: formattedButtons,
+      },
+    },
+  }
+}
+
 /**
  * Build the follower-gate card shown to non-followers. Centralized so the
  * comment, story, and DM branches all share the same copy and the same
@@ -82,9 +104,6 @@ export function buildFollowGateCard(params: {
   pageId?: string
 }): IGCard {
   const isFb = params.platform === 'fb'
-  const followUrl = isFb
-    ? (params.pageId ? `https://facebook.com/${params.pageId}` : `https://facebook.com/${params.username}`)
-    : `https://instagram.com/${params.username}`
 
   const defaultTitle = isFb ? "Follow our page to unlock" : "Follow to unlock"
   const defaultSubtitle = isFb
@@ -98,7 +117,6 @@ export function buildFollowGateCard(params: {
     title,
     subtitle,
     buttons: [
-      { type: "web_url", url: followUrl, title: "Follow" },
       { type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${params.ruleId}` },
     ],
   }
@@ -129,6 +147,16 @@ export async function sendCardDM(
   platform: 'ig' | 'fb' = 'ig'
 ): Promise<SendResult> {
   return post("me/messages", token, { recipient, message: buildCardAttachment(card) }, platform)
+}
+
+export async function sendButtonTemplateDM(
+  token: string,
+  recipient: { id?: string; comment_id?: string },
+  text: string,
+  buttons: IGButton[],
+  platform: 'ig' | 'fb' = 'ig'
+): Promise<SendResult> {
+  return post("me/messages", token, { recipient, message: buildButtonTemplateAttachment(text, buttons) }, platform)
 }
 
 export async function sendMediaDM(
