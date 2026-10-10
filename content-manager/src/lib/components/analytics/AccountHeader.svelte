@@ -52,11 +52,11 @@
         </a>
         <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block shrink-0"></div>
       {/if}
-      <div class="flex flex-col gap-1 min-w-0">
+      <div class="flex flex-col min-w-0">
         <h1 class="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white truncate leading-tight">
           {title || 'Content Studio'}
         </h1>
-        <div class="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+        <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
           {#if isSyncing}
             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
             <span class="truncate">Syncing with Meta...</span>

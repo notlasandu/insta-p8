@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MetaProfile, FacebookProfile, MetricItem, NormalizedPost } from './types';
+import { fetchFbVideoInsights } from './fb-video-insights';
 
 const API_VERSION = 'v21.0';
 const BASE_URL = `https://graph.facebook.com/${API_VERSION}`;
@@ -55,9 +56,12 @@ export async function fetchInstagramData(token: string, igAccountId: string) {
   const mediaInsightsRecord: Record<string, Array<{ name: string; values?: unknown }>> = {};
 
   const insightResults = await Promise.allSettled(
-    recentMedia.map((post: { id: string }) =>
-      fetchMetaEndpoint(`${post.id}/insights`, { metric: 'reach,saved,shares' }, token)
-    )
+    recentMedia.map((post: { id: string; media_type?: string }) => {
+      const metric = post.media_type === 'VIDEO'
+        ? 'reach,saved,shares,views,ig_reels_avg_watch_time,reels_skip_rate'
+        : 'reach,saved,shares';
+      return fetchMetaEndpoint(`${post.id}/insights`, { metric }, token);
+    })
   );
 
   insightResults.forEach((res, index) => {
@@ -103,7 +107,8 @@ export async function fetchFacebookData(token: string, pageId: string) {
       permalink: p.permalink_url,
       like_count: p.reactions?.summary?.total_count || 0,
       comments_count: p.comments?.summary?.total_count || 0,
-      shares_count: p.shares?.count || 0
+      shares_count: p.shares?.count || 0,
+      video_id: attachment?.target?.id
     };
   });
 
@@ -125,6 +130,18 @@ export async function fetchFacebookData(token: string, pageId: string) {
       if (!posts[index].reach_count && posts[index].views_count) {
         posts[index].reach_count = posts[index].views_count;
       }
+    }
+  });
+
+  const videoInsightResults = await Promise.allSettled(
+    posts.map((post) => post.video_id ? fetchFbVideoInsights(post.video_id, token) : Promise.resolve(null))
+  );
+
+  videoInsightResults.forEach((res, index) => {
+    if (res.status === 'fulfilled' && res.value) {
+      if (res.value.retention_graph) posts[index].retention_graph = res.value.retention_graph;
+      if (res.value.replays_count) posts[index].replays_count = res.value.replays_count;
+      if (res.value.avg_watch_time) posts[index].avg_watch_time = res.value.avg_watch_time;
     }
   });
 

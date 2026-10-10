@@ -174,7 +174,10 @@ async function runSync() {
     const recentIgPosts = data.media_posts.slice(0, 10);
     for (const post of recentIgPosts) {
       try {
-        const insightsRes = await fetchFromMeta(`${post.id}/insights`, { metric: 'reach,saved,shares' });
+        const metric = post.media_type === 'VIDEO'
+          ? 'reach,saved,shares,views,ig_reels_avg_watch_time,reels_skip_rate'
+          : 'reach,saved,shares';
+        const insightsRes = await fetchFromMeta(`${post.id}/insights`, { metric });
         const normalized = (insightsRes.data || []).map(i => {
           if (i.name === 'carousel_album_reach') i.name = 'reach';
           return i;
@@ -204,7 +207,8 @@ async function runSync() {
         permalink: p.permalink_url,
         like_count: p.reactions?.summary?.total_count || 0,
         comments_count: p.comments?.summary?.total_count || 0,
-        shares_count: p.shares?.count || 0
+        shares_count: p.shares?.count || 0,
+        video_id: attachment?.target?.id
       };
     });
 
@@ -247,6 +251,19 @@ async function runSync() {
         }
         if (!post.reach_count && post.views_count) {
           post.reach_count = post.views_count;
+        }
+
+        if (post.video_id) {
+          try {
+            const vRes = await fetchFromMeta(`${post.video_id}/video_insights`);
+            const vItems = vRes.data || [];
+            const retItem = vItems.find(i => i.name === 'post_video_retention_graph')?.values?.[0]?.value;
+            const repItem = vItems.find(i => i.name === 'fb_reels_replay_count')?.values?.[0]?.value;
+            if (retItem) post.retention_graph = retItem;
+            if (typeof repItem === 'number') post.replays_count = repItem;
+          } catch (e) {
+            // video_insights optional
+          }
         }
       } catch (e) {
         console.warn(`Failed to fetch insights for FB post ${post.id}:`, e.message);

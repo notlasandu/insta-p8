@@ -54,4 +54,10 @@ export interface NormalizedPost {
   reach_count?: number;
   views_count?: number;
   clicks_count?: number;
+  video_id?: string;
+  avg_watch_time?: number;
+  total_watch_time_ms?: number;
+  skip_rate?: number;
+  replays_count?: number;
+  retention_graph?: Record<string, number>;
 }

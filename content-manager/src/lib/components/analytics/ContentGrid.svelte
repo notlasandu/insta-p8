@@ -22,15 +22,14 @@
   let selectedPost = $state<any>(null);
   let isModalOpen = $state(false);
 
-  function getPostInsight(postId: string, name: string) {
-    return mediaInsights[postId]?.find((i: any) => i.name === name) ?? null;
+  function getInsightVal(postId: string, name: string) {
+    return mediaInsights[postId]?.find((i: any) => i.name === name)?.values?.[0]?.value;
   }
 
   let igItems = $derived(
     posts.map((p) => {
-      const reach = getPostInsight(p.id, 'reach');
-      const shares = getPostInsight(p.id, 'shares');
-      const saved = getPostInsight(p.id, 'saved');
+      const skipRate = getInsightVal(p.id, 'reels_skip_rate');
+      const avgWatch = getInsightVal(p.id, 'ig_reels_avg_watch_time');
       return {
         id: p.id,
         caption: p.caption,
@@ -41,12 +40,14 @@
         permalink: p.permalink,
         like_count: p.like_count || 0,
         comments_count: p.comments_count || 0,
-        shares_count: shares?.values?.[0]?.value || 0,
-        saved_count: saved?.values?.[0]?.value || 0,
-        reach_count: reach?.values?.[0]?.value || 0,
+        shares_count: getInsightVal(p.id, 'shares') || 0,
+        saved_count: getInsightVal(p.id, 'saved') || 0,
+        reach_count: getInsightVal(p.id, 'reach') || 0,
+        views_count: getInsightVal(p.id, 'views') || 0,
+        skip_rate: typeof skipRate === 'number' ? skipRate : undefined,
+        avg_watch_time: typeof avgWatch === 'number' ? Math.round(avgWatch / 1000) : undefined,
         platform: 'instagram' as const,
-        analysis: postAnalysisData[p.id],
-        rawInsightsId: reach?.id
+        analysis: postAnalysisData[p.id]
       };
     })
   );
@@ -69,10 +70,11 @@
       avg_watch_time: p.avg_watch_time || 0,
       video_views: p.video_views || 0,
       complete_views: p.complete_views || 0,
+      retention_graph: p.retention_graph || null,
+      replays_count: p.replays_count || 0,
       saved_count: 0,
       platform: 'facebook' as const,
-      analysis: postAnalysisData[p.id],
-      rawInsightsId: p.id
+      analysis: postAnalysisData[p.id]
     }))
   );
 

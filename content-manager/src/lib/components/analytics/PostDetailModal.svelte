@@ -1,4 +1,6 @@
 <script lang="ts">
+  import RetentionChart from "./RetentionChart.svelte";
+
   let {
     isOpen = $bindable(false),
     post = null
@@ -98,15 +100,8 @@
           {/if}
         </div>
 
-        {#if post.avg_watch_time || post.clicks_count}
-          <div class="shrink-0 flex items-center justify-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            {#if post.avg_watch_time}
-              <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">Avg Watch: {post.avg_watch_time}s</span>
-            {/if}
-            {#if post.clicks_count}
-              <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">Clicks: {post.clicks_count}</span>
-            {/if}
-          </div>
+        {#if post.retention_graph || post.skip_rate !== undefined}
+          <RetentionChart retentionGraph={post.retention_graph} skipRate={post.skip_rate} avgWatchTime={post.avg_watch_time} replaysCount={post.replays_count} />
         {/if}
 
         {#if post.analysis}
@@ -121,7 +116,7 @@
           </div>
         {/if}
 
-        <div class="flex-1 flex flex-col min-h-[220px] sm:min-h-[280px] bg-slate-50 dark:bg-slate-800/60 p-3.5 sm:p-4 rounded-2xl border border-slate-100 dark:border-slate-700/60">
+        <div class="flex-1 flex flex-col min-h-[160px] bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/60">
           <div class="flex items-center justify-between mb-2 shrink-0">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Caption</span>
             <button onclick={copyCaption} class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer">
