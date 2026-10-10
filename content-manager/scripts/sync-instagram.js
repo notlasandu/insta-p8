@@ -245,6 +245,9 @@ async function runSync() {
             post.reactions_breakdown = val;
           }
         }
+        if (!post.reach_count && post.views_count) {
+          post.reach_count = post.views_count;
+        }
       } catch (e) {
         console.warn(`Failed to fetch insights for FB post ${post.id}:`, e.message);
       }

@@ -23,9 +23,7 @@
   let isModalOpen = $state(false);
 
   function getPostInsight(postId: string, name: string) {
-    const insights = mediaInsights[postId];
-    if (!insights) return null;
-    return insights.find((i: any) => i.name === name);
+    return mediaInsights[postId]?.find((i: any) => i.name === name) ?? null;
   }
 
   let igItems = $derived(
@@ -65,7 +63,7 @@
       like_count: p.like_count || 0,
       comments_count: p.comments_count || 0,
       shares_count: p.shares_count || 0,
-      reach_count: p.reach_count || 0,
+      reach_count: p.reach_count || p.views_count || 0,
       views_count: p.views_count || 0,
       clicks_count: p.clicks_count || 0,
       avg_watch_time: p.avg_watch_time || 0,
@@ -115,19 +113,19 @@
   <div class="hidden sm:flex items-center justify-between gap-3 mb-6">
     <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
       <button 
-        class="px-3 sm:px-4 py-2 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {activeTab === 'instagram' ? 'bg-white dark:bg-slate-800 text-pink-600 dark:text-pink-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}"
+        class="px-3 sm:px-4 py-2 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {activeTab === 'instagram' ? 'bg-white dark:bg-slate-800 text-pink-600 dark:text-pink-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'}"
         onclick={() => activeTab = 'instagram'}>
         <span class="w-2 h-2 rounded-full bg-pink-500"></span>
         Instagram ({igItems.length})
       </button>
       <button 
-        class="px-3 sm:px-4 py-2 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {activeTab === 'facebook' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}"
+        class="px-3 sm:px-4 py-2 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {activeTab === 'facebook' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'}"
         onclick={() => activeTab = 'facebook'}>
         <span class="w-2 h-2 rounded-full bg-blue-600"></span>
         Facebook ({fbItems.length})
       </button>
       <button 
-        class="px-3 sm:px-4 py-2 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {activeTab === 'all' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'}"
+        class="px-3 sm:px-4 py-2 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {activeTab === 'all' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'}"
         onclick={() => activeTab = 'all'}>
         <span class="w-2 h-2 rounded-full bg-slate-900 dark:bg-white"></span>
         All ({igItems.length + fbItems.length})

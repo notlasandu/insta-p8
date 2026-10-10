@@ -38,7 +38,8 @@ export const load: PageLoad = async ({ params }) => {
 			media_posts: snapshot.media_posts || [],
 			facebook_posts: snapshot.facebook_posts || [],
 			media_insights: snapshot.media_insights || {},
-			historical_stats: historyRes.data || []
+			historical_stats: historyRes.data || [],
+			last_updated: snapshot.updated_at || null
 		};
 
 		const bullseyeData = strategyRes.data?.bullseye_data || { rings: [] };
