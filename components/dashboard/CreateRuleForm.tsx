@@ -39,7 +39,8 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   /* ---------- WHEN ---------- */
   const [triggers, setTriggers] = useState<string[]>([])
   const [storyTriggerType, setStoryTriggerType] = useState<"mention" | "reaction" | "reply">("mention")
-  const [selectedReel, setSelectedReel] = useState<any | null>(null)
+  const [mediaScope, setMediaScope] = useState<"all" | "specific">("all")
+  const [selectedReelIds, setSelectedReelIds] = useState<string[]>([])
   const [hasSelectedReelOption, setHasSelectedReelOption] = useState<boolean>(false)
 
   /* ---------- THEN ---------- */
@@ -123,11 +124,22 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
     setDelaySeconds(Number(content.delay_seconds) || 0)
     setTypingIndicator(content.typing_indicator === true)
     
-    if (editRule.specific_media_id) {
-      setSelectedReel({ id: editRule.specific_media_id, caption: "Selected post" })
-      setHasSelectedReelOption(true)
+    if (editRule.trigger_source === "comment") {
+      if (editRule.specific_media_id) {
+        const ids = editRule.specific_media_id
+          .split(",")
+          .map((id: string) => id.trim())
+          .filter(Boolean)
+        setSelectedReelIds(ids)
+        setMediaScope("specific")
+        setHasSelectedReelOption(true)
+      } else {
+        setSelectedReelIds([])
+        setMediaScope("all")
+        setHasSelectedReelOption(true)
+      }
     } else {
-      setHasSelectedReelOption(false)
+      setHasSelectedReelOption(true)
     }
   }, [editRule])
 
@@ -159,7 +171,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   const needsKeywords = triggerSource === "dm" || (triggerSource === "story" && storyTriggerType !== "mention")
 
   const whenValid = triggerSource === "comment" 
-    ? hasSelectedReelOption // Comment trigger is valid once they select a specific post or global option
+    ? hasSelectedReelOption && (mediaScope === "all" || selectedReelIds.length > 0)
     : !needsKeywords || triggers.length > 0
 
   const thenValid =
@@ -174,15 +186,25 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   ]
   const sourceLabel = triggerSource === "comment" ? "comment" : triggerSource === "dm" ? "direct message" : "story"
   const validationHint = step === 0
-    ? triggerSource === "comment" && !hasSelectedReelOption ? "Choose a post, reel, or All posts to continue." : needsKeywords && triggers.length === 0 ? "Add at least one keyword to continue." : ""
+    ? triggerSource === "comment" && (!hasSelectedReelOption || (mediaScope === "specific" && selectedReelIds.length === 0))
+      ? (mediaScope === "specific" && selectedReelIds.length === 0 ? "Select at least one post or reel to continue." : "Choose All posts or select specific content to continue.")
+      : needsKeywords && triggers.length === 0 ? "Add at least one keyword to continue." : ""
     : step === 1 && !thenValid ? "Add the reply people should receive." : step === 2 && !name.trim() ? "Give this workflow a name before publishing." : ""
 
   /* Plain-language summary sentence */
   const summary = useMemo(() => {
     const isReplyAll = triggerSource === "comment" && triggers.length === 0
+    const targetDesc =
+      triggerSource === "comment"
+        ? mediaScope === "all" || selectedReelIds.length === 0
+          ? "your posts"
+          : selectedReelIds.length === 1
+            ? "your selected post"
+            : `${selectedReelIds.length} selected posts`
+        : ""
     const who =
       triggerSource === "comment"
-        ? isReplyAll ? "anyone comments on your post" : `someone comments ${triggers.length ? `"${triggers[0]}"` : "a keyword"}`
+        ? isReplyAll ? `anyone comments on ${targetDesc}` : `someone comments ${triggers.length ? `"${triggers[0]}"` : "a keyword"} on ${targetDesc}`
         : triggerSource === "dm"
           ? `someone DMs you ${triggers.length ? `"${triggers[0]}"` : "a keyword"}`
           : storyTriggerType === "mention" ? "someone mentions you in a story"
@@ -194,7 +216,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
           : type === "media" ? `send them ${mediaType === "image" ? "an image" : `a ${mediaType}`}`
             : "send them a DM"
     return { who, what }
-  }, [triggerSource, triggers, storyTriggerType, replyMode, type, mediaType])
+  }, [triggerSource, triggers, storyTriggerType, replyMode, type, mediaType, mediaScope, selectedReelIds])
 
   /* ---------- save ---------- */
   const handleSubmit = async () => {
@@ -237,6 +259,11 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
       content.card = { title: cardTitle, subtitle: cardSubtitle || undefined, image_url: cardImage || undefined, buttons: cleanButtons }
     }
 
+    const finalSpecificMediaId =
+      triggerSource === "comment" && mediaScope === "specific" && selectedReelIds.length > 0
+        ? selectedReelIds.join(",")
+        : null
+
     const payload = {
       userId,
       name,
@@ -247,7 +274,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
           : triggerSource === "story" && storyTriggerType === "reaction" && triggers.length === 0 ? "ALL_REACTIONS"
             : triggers.length > 0 ? triggers.join(", ") : "ALL",
       content,
-      specific_media_id: selectedReel?.id || null,
+      specific_media_id: finalSpecificMediaId,
     }
 
     try {
@@ -327,7 +354,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
               <StepHeader
                 number={1}
                 title={triggerSource === "comment" ? "Where should this workflow run?" : triggerSource === "dm" ? "Which messages should start it?" : "Which story action should start it?"}
-                description={triggerSource === "comment" ? "Choose one post, one reel, or apply it everywhere." : "Choose the simple condition that starts this workflow."}
+                description={triggerSource === "comment" ? "Choose all content or select specific posts and reels." : "Choose the simple condition that starts this workflow."}
               />
 
               {triggerSource === "story" && (
@@ -362,85 +389,175 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
 
               {triggerSource === "comment" && (
                 <div className="space-y-4">
-                  <FieldLabel>Automate which post or reel?</FieldLabel>
-                  {loadingReels ? (
-                    <div className="p-8 flex flex-col items-center justify-center gap-3 border border-border rounded-2xl bg-white/[0.01]">
-                      <Loader2 className="w-6 h-6 animate-spin text-accent-yellow-foreground" />
-                      <span className="text-xs text-muted-foreground font-mono-ui">Fetching Instagram feed...</span>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel>Automate which content?</FieldLabel>
+                    {mediaScope === "specific" && selectedReelIds.length > 0 && (
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-accent-yellow/15 text-accent-yellow-foreground border border-accent-yellow/30">
+                        {selectedReelIds.length} {selectedReelIds.length === 1 ? "video / post" : "videos / posts"} selected
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Mode Selector: All Content vs Specific Posts */}
+                  <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/40 rounded-xl border border-border">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMediaScope("all")
+                        setHasSelectedReelOption(true)
+                      }}
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                        hasSelectedReelOption && mediaScope === "all"
+                          ? "bg-card text-foreground shadow-sm border border-border"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Globe className="w-4 h-4 text-accent-blue" />
+                      <span>All Posts & Reels</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMediaScope("specific")
+                        setHasSelectedReelOption(true)
+                      }}
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                        hasSelectedReelOption && mediaScope === "specific"
+                          ? "bg-card text-foreground shadow-sm border border-border"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Film className="w-4 h-4 text-accent-pink" />
+                      <span>Selected Content {selectedReelIds.length > 0 ? `(${selectedReelIds.length})` : ""}</span>
+                    </button>
+                  </div>
+
+                  {/* All Posts Explanation Card */}
+                  {hasSelectedReelOption && mediaScope === "all" && (
+                    <div className="p-4 rounded-xl border border-border bg-card/60 flex items-start gap-3 animate-in fade-in duration-200">
+                      <div className="w-9 h-9 rounded-lg bg-accent-blue/10 text-accent-blue flex items-center justify-center shrink-0 mt-0.5 border border-accent-blue/20">
+                        <Globe className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-foreground">Global Trigger Active</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          This automation will run across all your existing Instagram reels, posts, and any new content you post in the future.
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3 max-h-[55vh] sm:max-h-[420px] overflow-y-auto pr-1 pb-1">
-                      {/* Option: Global Post Rule */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedReel(null)
-                          setHasSelectedReelOption(true)
-                        }}
-                        className={`aspect-square rounded-xl border flex flex-col items-center justify-center p-2 sm:p-4 text-center transition-all duration-200 ${
-                                                  hasSelectedReelOption && selectedReel === null
-                                                    ? "border-accent-yellow ring-2 ring-accent-yellow/30 bg-accent-yellow/10"
-                                                    : "border-border bg-card hover:border-foreground/30 hover:bg-accent"
-                                                }`}
-                                              >
-                                                <Globe className="w-6 h-6 mb-2 text-accent-blue" />
-                                                <span className="text-xs font-bold text-foreground">All Posts & Reels</span>
-                                                <span className="text-[10px] text-muted-foreground mt-1 font-mono-ui">Global Trigger</span>
-                                              </button>
+                  )}
 
-                      {reels.map((reel) => {
-                        const isSelected = hasSelectedReelOption && selectedReel?.id === reel.id
-                        return (
-                          <button
-                            key={reel.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedReel(reel)
-                              setHasSelectedReelOption(true)
-                            }}
-                            className={`aspect-square rounded-xl border overflow-hidden relative group text-left transition-all duration-200 bg-neutral-900 ${
-                                                        isSelected
-                                                          ? "border-accent-yellow ring-2 ring-accent-yellow/30"
-                                                          : "border-border hover:border-foreground/40"
-                                                      }`}
-                                                    >
-                                                      {reel.image_url ? (
-                                                        <img
-                                                          src={reel.image_url}
-                                                          alt=""
-                                                          loading="lazy"
-                                                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                                                        />
-                                                      ) : (
-                                                        <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
-                                                          <Film className="w-6 h-6 text-neutral-500" />
-                                                        </div>
-                                                      )}
+                  {/* Specific Content Picker */}
+                  {hasSelectedReelOption && mediaScope === "specific" && (
+                    <div className="space-y-3 animate-in fade-in duration-200">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs px-0.5">
+                        <p className="text-[11px] text-muted-foreground">
+                          Choose one or more videos / posts to automate:
+                        </p>
+                        <div className="flex items-center gap-2 font-mono-ui">
+                          {reels.length > 0 && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (selectedReelIds.length === reels.length) {
+                                    setSelectedReelIds([])
+                                  } else {
+                                    setSelectedReelIds(reels.map((r) => r.id))
+                                  }
+                                }}
+                                className="text-[11px] text-accent-yellow-foreground hover:underline font-semibold"
+                              >
+                                {selectedReelIds.length === reels.length ? "Deselect all" : `Select all (${reels.length})`}
+                              </button>
+                              {selectedReelIds.length > 0 && (
+                                <>
+                                  <span className="text-muted-foreground">•</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedReelIds([])}
+                                    className="text-[11px] text-muted-foreground hover:text-foreground"
+                                  >
+                                    Clear
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
 
-                                                      {/* Subtle dark gradient so caption + type pill stay readable in BOTH themes */}
-                                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                      {loadingReels ? (
+                        <div className="p-8 flex flex-col items-center justify-center gap-3 border border-border rounded-2xl bg-white/[0.01]">
+                          <Loader2 className="w-6 h-6 animate-spin text-accent-yellow-foreground" />
+                          <span className="text-xs text-muted-foreground font-mono-ui">Fetching Instagram feed...</span>
+                        </div>
+                      ) : reels.length === 0 ? (
+                        <div className="p-8 text-center border border-dashed border-border rounded-xl">
+                          <Film className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                          <p className="text-xs font-semibold text-foreground">No posts or reels found</p>
+                          <p className="text-[11px] text-muted-foreground mt-1">Make sure your Instagram account has published media.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3 max-h-[55vh] sm:max-h-[420px] overflow-y-auto pr-1 pb-1">
+                          {reels.map((reel) => {
+                            const isSelected = selectedReelIds.includes(reel.id)
+                            return (
+                              <button
+                                key={reel.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedReelIds((prev) =>
+                                    prev.includes(reel.id)
+                                      ? prev.filter((id) => id !== reel.id)
+                                      : [...prev, reel.id]
+                                  )
+                                }}
+                                className={`aspect-square rounded-xl border overflow-hidden relative group text-left transition-all duration-200 bg-neutral-900 ${
+                                  isSelected
+                                    ? "border-accent-yellow ring-2 ring-accent-yellow/40"
+                                    : "border-border hover:border-foreground/40"
+                                }`}
+                              >
+                                {reel.image_url ? (
+                                  <img
+                                    src={reel.image_url}
+                                    alt=""
+                                    loading="lazy"
+                                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                                    <Film className="w-6 h-6 text-neutral-500" />
+                                  </div>
+                                )}
 
-                                                      {/* Type Overlay */}
-                                                      <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-black/70 text-[9px] font-mono-ui text-white uppercase tracking-wider border border-white/10">
-                                                        {reel.media_type === "STORY" ? "IG Story" : reel.media_type === "VIDEO" ? "IG Reel" : reel.media_type === "FB_POST" ? "FB Post" : "IG Post"}
-                                                      </span>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-                                                      {/* Selected Check overlay */}
-                                                      {isSelected && (
-                                                        <div className="absolute inset-0 bg-accent-yellow/20 flex items-center justify-center backdrop-blur-[1px]">
-                                                          <div className="w-9 h-9 rounded-full bg-accent-yellow text-accent-yellow-foreground flex items-center justify-center shadow-lg ring-2 ring-accent-yellow-foreground">
-                                                            <Check className="w-4 h-4 stroke-[3]" />
-                                                          </div>
-                                                        </div>
-                                                      )}
+                                <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-black/70 text-[9px] font-mono-ui text-white uppercase tracking-wider border border-white/10">
+                                  {reel.media_type === "STORY" ? "IG Story" : reel.media_type === "VIDEO" ? "IG Reel" : reel.media_type === "FB_POST" ? "FB Post" : "IG Post"}
+                                </span>
 
-                                                      {/* Caption snippet at bottom — white text on dark gradient for contrast in BOTH themes */}
-                                                      <div className="absolute inset-x-0 bottom-0 px-2 pt-6 pb-2 pointer-events-none">
-                                                        <p className="text-[10px] text-white line-clamp-1 font-sans drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{reel.caption || "Untitled"}</p>
-                                                      </div>
-                                                    </button>
-                        )
-                      })}
+                                <div className="absolute top-2 right-2">
+                                  {isSelected ? (
+                                    <div className="w-6 h-6 rounded-md bg-accent-yellow text-accent-yellow-foreground flex items-center justify-center shadow-md ring-1 ring-accent-yellow-foreground">
+                                      <Check className="w-4 h-4 stroke-[3]" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-md border border-white/50 bg-black/40 group-hover:border-white transition-colors flex items-center justify-center" />
+                                  )}
+                                </div>
+
+                                <div className="absolute inset-x-0 bottom-0 px-2 pt-6 pb-2 pointer-events-none">
+                                  <p className="text-[10px] text-white line-clamp-1 font-sans drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                                    {reel.caption || "Untitled"}
+                                  </p>
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

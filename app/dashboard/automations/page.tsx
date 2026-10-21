@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { ArrowLeft, Loader2, Pencil, Search, Trash2 } from "lucide-react"
+import { ArrowLeft, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react"
 import { useInstagramSession } from "@/hooks/use-instagram-session"
 import { QuickAutomationForm } from "@/components/dashboard/QuickAutomationForm"
 import { AssistantSettings } from "@/components/dashboard/AssistantSettings"
@@ -15,6 +15,7 @@ export default function AutomationsPage() {
   const [error, setError] = useState("")
   const [query, setQuery] = useState("")
   const [edit, setEdit] = useState<Automation | null>(null)
+  const [creatingNew, setCreatingNew] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -55,11 +56,23 @@ export default function AutomationsPage() {
   return <div className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-12">
     <header className="mb-8 flex items-start justify-between gap-4">
       <div><h1 className="text-2xl font-semibold tracking-tight">Auto replies</h1><p className="mt-1.5 text-sm text-muted-foreground">A keyword comes in. Your answer goes out.</p></div>
-      <span className="pt-1 text-xs text-muted-foreground">{rules.filter(rule => rule.is_active).length} active</span>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => { setEdit(null); setCreatingNew(true) }}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="size-3.5" />
+          New workflow
+        </button>
+        <span className="text-xs text-muted-foreground">{rules.filter(rule => rule.is_active).length} active</span>
+      </div>
     </header>
     {edit ? <section>
       <button className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" onClick={() => setEdit(null)}><ArrowLeft className="size-4" />Back to auto replies</button>
       <CreateRuleForm key={edit.id} userId={userId} triggerSource={edit.trigger_source} editRule={edit} onSuccess={() => { setEdit(null); void refresh() }} />
+    </section> : creatingNew ? <section>
+      <button className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" onClick={() => setCreatingNew(false)}><ArrowLeft className="size-4" />Back to auto replies</button>
+      <CreateRuleForm userId={userId} triggerSource="comment" onSuccess={() => { setCreatingNew(false); void refresh() }} />
     </section> : <>
       <QuickAutomationForm userId={userId} initialSource="dm" onSuccess={() => { setSaved(true); void refresh() }} />
       {saved && <p role="status" className="mt-3 text-xs text-muted-foreground">Saved and active. You can add another reply above.</p>}
@@ -72,7 +85,20 @@ export default function AutomationsPage() {
         {loading ? <Loader2 className="my-8 size-5 animate-spin text-muted-foreground" /> :
           <div className="divide-y divide-border border-y border-border">
             {filtered.map(rule => <div key={rule.id} className="flex flex-wrap items-center gap-3 py-4 sm:flex-nowrap">
-              <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{rule.trigger_value}</p><p className="mt-1 truncate text-sm text-muted-foreground">{rule.response_content?.message || rule.response_content?.card?.title || rule.name}</p><p className="mt-1.5 text-xs text-muted-foreground">{rule.trigger_source === "dm" ? "Direct message" : rule.trigger_source === "comment" ? "Post comment" : "Story"}{rule.specific_media_id ? " · Selected post" : ""}</p></div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{rule.trigger_value}</p>
+                <p className="mt-1 truncate text-sm text-muted-foreground">{rule.response_content?.message || rule.response_content?.card?.title || rule.name}</p>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {rule.trigger_source === "dm" ? "Direct message" : rule.trigger_source === "comment" ? "Post comment" : "Story"}
+                  {rule.specific_media_id
+                    ? rule.specific_media_id.includes(",")
+                      ? ` · ${rule.specific_media_id.split(",").filter(Boolean).length} selected posts`
+                      : " · 1 selected post"
+                    : rule.trigger_source === "comment"
+                      ? " · All posts"
+                      : ""}
+                </p>
+              </div>
               {deleting === rule.id ? <div className="flex items-center gap-2 text-xs"><span>Delete this reply?</span><button disabled={!!busy} onClick={() => void update(rule, true)} className="rounded-md bg-primary px-3 py-2 text-primary-foreground">Delete</button><button onClick={() => setDeleting(null)} className={button}>Cancel</button></div> :
                 <div className="flex items-center gap-1">
                   <button disabled={!!busy} onClick={() => void update(rule)} aria-label={`${rule.is_active ? "Pause" : "Activate"} ${rule.name}`} aria-pressed={rule.is_active} className="mr-2 flex min-w-16 items-center justify-center gap-1.5 rounded-md border border-border bg-card px-2 py-1.5 text-xs">{busy === rule.id ? <Loader2 className="size-3 animate-spin" /> : <span className={`size-1.5 rounded-full ${rule.is_active ? "bg-foreground" : "bg-muted-foreground"}`} />}{rule.is_active ? "On" : "Paused"}</button>

@@ -111,9 +111,24 @@ export function AutomationList({ automations, onDelete, onEdit, onChanged, userI
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-accent-pink ml-1">
               <Instagram className="w-3 h-3" /> Post Specific
             </div>
-            {postSpecificRules.map((rule, idx) => (
-              <RuleCard key={rule.id} rule={rule} onDelete={onDelete} onEdit={onEdit} onToggle={handleToggle} onDuplicate={handleDuplicate} index={idx} mediaUrl={mediaMap[rule.specific_media_id || ""]} isSpecific />
-            ))}
+            {postSpecificRules.map((rule, idx) => {
+              const specificIds = (rule.specific_media_id || "").split(",").map((id) => id.trim()).filter(Boolean)
+              const firstId = specificIds[0] || ""
+              return (
+                <RuleCard
+                  key={rule.id}
+                  rule={rule}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  onToggle={handleToggle}
+                  onDuplicate={handleDuplicate}
+                  index={idx}
+                  mediaUrl={mediaMap[firstId]}
+                  isSpecific
+                  postCount={specificIds.length}
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -121,7 +136,7 @@ export function AutomationList({ automations, onDelete, onEdit, onChanged, userI
   )
 }
 
-function RuleCard({ rule, onDelete, onEdit, onToggle, onDuplicate, index, isSpecific, mediaUrl }: {
+function RuleCard({ rule, onDelete, onEdit, onToggle, onDuplicate, index, isSpecific, mediaUrl, postCount }: {
   rule: Automation
   onDelete: (id: string) => void
   onEdit: (rule: Automation) => void
@@ -130,6 +145,7 @@ function RuleCard({ rule, onDelete, onEdit, onToggle, onDuplicate, index, isSpec
   index: number
   isSpecific?: boolean
   mediaUrl?: string
+  postCount?: number
 }) {
   const [confirming, setConfirming] = useState(false)
   const keywords = rule.trigger_value.split(",").map(k => k.trim()).filter(Boolean)
@@ -156,7 +172,7 @@ function RuleCard({ rule, onDelete, onEdit, onToggle, onDuplicate, index, isSpec
     >
       <div className="flex items-start gap-3">
         {isSpecific ? (
-          <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
+          <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0 border border-border relative">
             {mediaUrl ? (
               <img src={mediaUrl} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -164,6 +180,11 @@ function RuleCard({ rule, onDelete, onEdit, onToggle, onDuplicate, index, isSpec
                 <Instagram className="w-4 h-4 text-muted-foreground" />
               </div>
             )}
+            {postCount && postCount > 1 ? (
+              <span className="absolute bottom-0 right-0 bg-black/80 text-[8px] font-mono-ui text-white font-bold px-1 rounded-tl">
+                +{postCount - 1}
+              </span>
+            ) : null}
           </div>
         ) : (
           <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-accent-blue/10 border border-accent-blue/30">
@@ -267,6 +288,11 @@ function RuleCard({ rule, onDelete, onEdit, onToggle, onDuplicate, index, isSpec
               <span className="text-[11px] text-muted-foreground truncate max-w-[120px]">{responsePreview}</span>
             </div>
 
+            {postCount && postCount > 1 && (
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border text-[10px] px-1.5 py-0">
+                {postCount} posts
+              </Badge>
+            )}
             {replyMode === "dm_only" && (
               <Badge variant="secondary" className="bg-accent-blue/10 text-accent-blue border border-accent-blue/30 text-[10px] px-1.5 py-0">
                 <EyeOff className="w-2.5 h-2.5 mr-0.5" /> DM only

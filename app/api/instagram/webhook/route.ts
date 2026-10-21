@@ -89,6 +89,12 @@ function keywordMatches(triggerValue: string, text: string): boolean {
     })
 }
 
+function matchesMedia(specificMediaId: string | null | undefined, targetMediaId: string | null | undefined): boolean {
+  if (!specificMediaId || !targetMediaId) return false
+  const ids = specificMediaId.split(",").map((s: string) => s.trim()).filter(Boolean)
+  return ids.includes(targetMediaId)
+}
+
 // ============================================================
 // Unified response sender — handles text, card, media, quick
 // replies, typing indicators, and human-like delays.
@@ -385,16 +391,27 @@ export async function POST(request: NextRequest) {
 
           const commentAutomations = automations.filter((a: any) => a.trigger_source === "comment")
 
-          // Priority: specific post reply-all → specific post keyword → global keyword
+          // Priority:
+          // 1. Specific post(s) reply-all
+          // 2. Specific post(s) keyword match
+          // 3. Global reply-all (all posts)
+          // 4. Global keyword match (all posts)
           let match = commentAutomations.find(
-            (a: any) => a.specific_media_id === mediaId && a.trigger_type === "reply_all",
+            (a: any) => matchesMedia(a.specific_media_id, mediaId) && a.trigger_type === "reply_all",
           )
           if (!match) {
             match = commentAutomations.find(
               (a: any) =>
-                a.specific_media_id === mediaId &&
+                matchesMedia(a.specific_media_id, mediaId) &&
                 a.trigger_type === "keyword" &&
                 keywordMatches(a.trigger_value, commentText),
+            )
+          }
+          if (!match) {
+            match = commentAutomations.find(
+              (a: any) =>
+                !a.specific_media_id &&
+                a.trigger_type === "reply_all",
             )
           }
           if (!match) {
@@ -492,14 +509,14 @@ export async function POST(request: NextRequest) {
           if (event.message?.attachments?.[0]?.type === "story_mention") {
             storyMediaId = event.message.attachments[0].payload?.url || null
             match = storyAutomations.find(
-              (a: any) => a.trigger_type === "mention" && (!a.specific_media_id || a.specific_media_id === storyMediaId),
+              (a: any) => a.trigger_type === "mention" && (!a.specific_media_id || matchesMedia(a.specific_media_id, storyMediaId)),
             )
           } else if (event.reaction) {
             const reactionEmoji = event.reaction.emoji
             storyMediaId = event.reaction.mid || null
             match = storyAutomations.find((a: any) => {
               if (a.trigger_type !== "reaction") return false
-              if (a.specific_media_id && a.specific_media_id !== storyMediaId) return false
+              if (a.specific_media_id && !matchesMedia(a.specific_media_id, storyMediaId)) return false
               const triggers = a.trigger_value?.split(",").map((t: string) => t.trim()) || []
               if (triggers.length > 0 && triggers[0] !== "ALL" && triggers[0] !== "ALL_REACTIONS" && triggers[0] !== "") {
                 return triggers.includes(reactionEmoji)
@@ -511,7 +528,7 @@ export async function POST(request: NextRequest) {
             storyMediaId = event.message.reply_to.story.id || null
             match = storyAutomations.find((a: any) => {
               if (a.trigger_type !== "reply") return false
-              if (a.specific_media_id && a.specific_media_id !== storyMediaId) return false
+              if (a.specific_media_id && !matchesMedia(a.specific_media_id, storyMediaId)) return false
               const triggers = a.trigger_value?.split(",").map((t: string) => t.trim()) || []
               if (
                 triggers.length > 0 &&
