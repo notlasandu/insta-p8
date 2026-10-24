@@ -24,10 +24,10 @@ export function calculateDailyStats(
   };
 
   const facebook = {
-    reach: 0,
+    reach: extractFb('page_total_media_view_unique'),
     engaged: extractFb('page_post_engagements'),
     views: extractFb('page_views_total'),
-    clicks: 0,
+    clicks: extractFb('page_total_actions'),
     followers: fbProfile.followers_count || 0
   };
 
@@ -93,6 +93,11 @@ export async function persistSyncData(
 
   const igPostRows = (payload.igMedia || []).map((post) => {
     const firstLine = (post.caption || '').split('\n')[0].trim().slice(0, 100);
+    const postInsights = payload.mediaInsights?.[post.id] || [];
+    const getVal = (metricName: string) => {
+      const item = postInsights.find((i: any) => i.name === metricName);
+      return item?.values?.[0]?.value ?? item?.total_value?.value ?? 0;
+    };
     return {
       id: post.id,
       account_id: accountId,
@@ -102,9 +107,15 @@ export async function persistSyncData(
       description: post.caption || '',
       likes: post.like_count || 0,
       comments: post.comments_count || 0,
-      shares: 0,
+      shares: getVal('shares'),
       thumbnail: post.thumbnail_url || post.media_url || '',
-      metadata: { platform: 'instagram', permalink: post.permalink }
+      metadata: {
+        platform: 'instagram',
+        reach: getVal('reach'),
+        views: getVal('views'),
+        shares: getVal('shares'),
+        permalink: post.permalink
+      }
     };
   });
 

@@ -18,7 +18,7 @@ export const analyticsTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        accountId: { type: 'string', description: 'Account ID (default: berl_view)' },
+        accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' },
         startDate: { type: 'string', description: 'Start date in YYYY-MM-DD format' },
         endDate: { type: 'string', description: 'End date in YYYY-MM-DD format' },
         limit: { type: 'number', description: 'Maximum days of historical data to retrieve (default: 30)' }
@@ -31,7 +31,7 @@ export const analyticsTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        accountId: { type: 'string', description: 'Account ID (default: berl_view)' },
+        accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' },
         sortBy: {
           type: 'string',
           enum: ['likes', 'comments', 'shares'],
@@ -47,14 +47,14 @@ export const analyticsTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        accountId: { type: 'string', description: 'Account ID (default: berl_view)' }
+        accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' }
       }
     }
   }
 ];
 
 export async function handleAnalyticsTools(name: string, args: any) {
-  const accountId = args?.accountId || 'berl_view';
+  const accountId = args?.accountId || 'copiumbuilder';
 
   if (name === 'get_account_overview') {
     const user = await getDefaultUser();

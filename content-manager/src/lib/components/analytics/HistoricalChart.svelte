@@ -13,7 +13,7 @@
   let activePlatform = $state<PlatformFilter | 'compare'>('combined');
 
   const metrics: { id: ChartMetric; label: string }[] = [
-    { id: 'reach', label: 'Reach' }, { id: 'views', label: 'Views' },
+    { id: 'reach', label: 'Reach' }, { id: 'views', label: 'Profile Visits' },
     { id: 'engaged', label: 'Engaged' }, { id: 'clicks', label: 'Clicks' },
     { id: 'followers', label: 'Followers' }
   ];

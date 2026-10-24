@@ -84,7 +84,7 @@ export async function fetchFacebookData(token: string, pageId: string) {
   }, token) as Promise<FacebookProfile>;
 
   const insightsPromise = fetchMetaEndpoint(`${pageId}/insights`, {
-    metric: 'page_post_engagements,page_daily_follows,page_views_total,page_video_views',
+    metric: 'page_total_media_view_unique,page_media_view,page_post_engagements,page_daily_follows,page_views_total,page_video_views,page_total_actions',
     period: 'day'
   }, token).then((res) => (res.data || []) as MetricItem[]).catch(() => [] as MetricItem[]);
 

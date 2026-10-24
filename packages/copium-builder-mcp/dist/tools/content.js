@@ -6,7 +6,7 @@ export const contentTools = [
         inputSchema: {
             type: 'object',
             properties: {
-                accountId: { type: 'string', description: 'Account identifier (default: berl_view)' },
+                accountId: { type: 'string', description: 'Account identifier (default: copiumbuilder)' },
                 status: { type: 'string', enum: ['ALL', 'IDEA', 'DRAFT', 'READY', 'POSTED'] }
             }
         }
@@ -18,7 +18,7 @@ export const contentTools = [
             type: 'object',
             properties: {
                 id: { type: 'string', description: 'Unique post ID (generated if not provided)' },
-                accountId: { type: 'string', description: 'Account ID (default: berl_view)' },
+                accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' },
                 title: { type: 'string', description: 'Post hook / working title' },
                 status: { type: 'string', enum: ['IDEA', 'DRAFT', 'READY', 'POSTED'] },
                 description: { type: 'string', description: 'Script, outline, or caption copy' },
@@ -45,7 +45,7 @@ export const contentTools = [
         inputSchema: {
             type: 'object',
             properties: {
-                accountId: { type: 'string', description: 'Account ID (default: berl_view)' }
+                accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' }
             }
         }
     },
@@ -55,7 +55,7 @@ export const contentTools = [
         inputSchema: {
             type: 'object',
             properties: {
-                accountId: { type: 'string', description: 'Account ID (default: berl_view)' },
+                accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' },
                 rings: {
                     type: 'array',
                     items: {
@@ -78,7 +78,7 @@ export const contentTools = [
         inputSchema: {
             type: 'object',
             properties: {
-                accountId: { type: 'string', description: 'Account ID (default: berl_view)' }
+                accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' }
             }
         }
     },
@@ -88,7 +88,7 @@ export const contentTools = [
         inputSchema: {
             type: 'object',
             properties: {
-                accountId: { type: 'string', description: 'Account ID (default: berl_view)' },
+                accountId: { type: 'string', description: 'Account ID (default: copiumbuilder)' },
                 summary: {
                     type: 'object',
                     properties: {
@@ -104,7 +104,7 @@ export const contentTools = [
     }
 ];
 export async function handleContentTools(name, args) {
-    const accountId = args?.accountId || 'berl_view';
+    const accountId = args?.accountId || 'copiumbuilder';
     if (name === 'list_content_pipeline') {
         let query = supabase
             .from('content_posts')

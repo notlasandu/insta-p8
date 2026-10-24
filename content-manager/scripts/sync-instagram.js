@@ -109,7 +109,7 @@ async function runSync() {
     let fbInsights = [];
     try {
       const fbInsightsRes = await fetchFromMeta(`${FB_PAGE_ID}/insights`, {
-        metric: 'page_post_engagements,page_daily_follows,page_views_total,page_video_views',
+        metric: 'page_total_media_view_unique,page_media_view,page_post_engagements,page_daily_follows,page_views_total,page_video_views,page_total_actions',
         period: 'day'
       });
       fbInsights = fbInsightsRes.data || [];
@@ -136,10 +136,10 @@ async function runSync() {
     };
 
     const fbStats = {
-      reach: 0,
+      reach: extractFb('page_total_media_view_unique'),
       engaged: extractFb('page_post_engagements'),
       views: extractFb('page_views_total'),
-      clicks: 0,
+      clicks: extractFb('page_total_actions'),
       followers: fbProfile.followers_count || 0
     };
 
@@ -323,7 +323,7 @@ async function runSync() {
         description: post.caption || '',
         likes: post.like_count || 0,
         comments: post.comments_count || 0,
-        shares: 0,
+        shares: (data.media_insights?.[post.id] || []).find(i => i.name === 'shares')?.values?.[0]?.value || 0,
         thumbnail: post.thumbnail_url || post.media_url || '',
         metadata: {
           platform: 'instagram',

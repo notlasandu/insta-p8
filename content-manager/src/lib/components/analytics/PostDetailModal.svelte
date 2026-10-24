@@ -1,5 +1,6 @@
 <script lang="ts">
   import RetentionChart from "./RetentionChart.svelte";
+  import PostMediaEmbed from "./PostMediaEmbed.svelte";
 
   let {
     isOpen = $bindable(false),
@@ -22,6 +23,13 @@
       setTimeout(() => copied = false, 2000);
     }
   }
+
+  let isVideo = $derived(
+    post?.media_type === 'VIDEO' || 
+    Boolean(post?.retention_graph) || 
+    Boolean(post?.video_id) || 
+    post?.permalink?.includes('/reel/')
+  );
 </script>
 
 {#if isOpen && post}
@@ -39,36 +47,32 @@
       <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
     </div>
 
-    <div class="w-full md:w-1/2 lg:w-[54%] bg-slate-950 flex items-center justify-center shrink-0 relative overflow-hidden h-56 sm:h-72 md:h-full border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
-      {#if post.thumbnail_url || post.media_url}
-        <img src={post.thumbnail_url || post.media_url} alt="Post preview" class="w-full h-full object-contain" />
-      {:else}
-        <div class="text-xs text-slate-500 font-semibold">No Media Preview</div>
-      {/if}
-
-      <div class="absolute top-3 left-3 flex items-center gap-1.5 md:hidden">
-        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur {post.platform === 'facebook' ? 'bg-blue-600 text-white' : 'bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white'}">
-          {post.platform}
-        </span>
-      </div>
-
-      <a 
-        href={post.permalink} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        aria-label={`Open on ${post.platform === 'facebook' ? 'Facebook' : 'Instagram'}`}
-        title={`Open on ${post.platform === 'facebook' ? 'Facebook' : 'Instagram'}`}
-        class="absolute bottom-3 right-3 p-2.5 rounded-full shadow-lg text-white {post.platform === 'facebook' ? 'bg-blue-600/90 hover:bg-blue-600' : 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 hover:opacity-95'} backdrop-blur active:scale-95 transition-all flex items-center justify-center cursor-pointer">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-      </a>
-    </div>
+    <PostMediaEmbed
+      mediaUrl={post.media_url}
+      thumbnailUrl={post.thumbnail_url}
+      platform={post.platform}
+      {isVideo}
+    />
 
     <div class="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900 min-w-0">
       <div class="py-3 px-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-2">
-          <span class="hidden md:inline-flex text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full {post.platform === 'facebook' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300'}">
-            {post.platform}
-          </span>
+        <div class="flex items-center gap-2.5">
+          {#if post.permalink}
+            <a
+              href={post.permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open on ${post.platform === 'facebook' ? 'Facebook' : 'Instagram'}`}
+              title={`Open on ${post.platform === 'facebook' ? 'Facebook' : 'Instagram'}`}
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-white shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer {post.platform === 'facebook' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 hover:opacity-95'}"
+            >
+              {#if post.platform === 'facebook'}
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              {:else}
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              {/if}
+            </a>
+          {/if}
           <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">
             {new Date(post.timestamp).toLocaleDateString(undefined, { dateStyle: 'medium' })}
           </span>
