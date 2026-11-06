@@ -122,12 +122,40 @@ async function sendAutomationResponse(
   if (content.media?.url) {
     result = await sendMediaDM(token, recipient, content.media.type || "image", content.media.url, platform)
     if (result.ok && content.message) {
-      result = await sendTextDM(token, recipient, content.message, quickReplies, platform)
+      if (content.link_url) {
+        const btnTitle = (content.link_title || "Open Link").slice(0, 20)
+        result = await sendButtonTemplateDM(
+          token,
+          recipient,
+          content.message.slice(0, 640),
+          [{ type: "web_url", url: content.link_url, title: btnTitle }],
+          platform
+        )
+        if (!result?.ok && recipient.comment_id) {
+          result = await sendTextDM(token, recipient, `${content.message}\n\n👉 ${content.link_url}`, quickReplies, platform)
+        }
+      } else {
+        result = await sendTextDM(token, recipient, content.message, quickReplies, platform)
+      }
     }
   } else if (content.card) {
     result = await sendCardDM(token, recipient, content.card, platform)
   } else if (content.message) {
-    result = await sendTextDM(token, recipient, content.message, quickReplies, platform)
+    if (content.link_url) {
+      const btnTitle = (content.link_title || "Open Link").slice(0, 20)
+      result = await sendButtonTemplateDM(
+        token,
+        recipient,
+        content.message.slice(0, 640),
+        [{ type: "web_url", url: content.link_url, title: btnTitle }],
+        platform
+      )
+      if (!result?.ok && recipient.comment_id) {
+        result = await sendTextDM(token, recipient, `${content.message}\n\n👉 ${content.link_url}`, quickReplies, platform)
+      }
+    } else {
+      result = await sendTextDM(token, recipient, content.message, quickReplies, platform)
+    }
   } else {
     result = { ok: false, error: "empty content" }
   }
@@ -137,6 +165,9 @@ async function sendAutomationResponse(
 }
 
 function responsePreviewText(content: any): string {
+  if (content.message && content.link_url) {
+    return `${content.message}\n[Button: ${content.link_title || "Open Link"} -> ${content.link_url}]`
+  }
   if (content.message) return content.message
   if (content.card) return `[Card] ${content.card.title}`
   if (content.media?.url) return `[${content.media.type || "media"}]`

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import {
   Plus, Trash2, Film, Check, MessageCircle, Send, AtSign, Heart,
   MessageSquare, Image as ImageIcon, Timer, Eye, Megaphone, Lock,
-  Link2, Zap, ChevronDown, ChevronRight, ChevronLeft, X, Loader2,
+  Link2, ExternalLink, Zap, ChevronDown, ChevronRight, ChevronLeft, X, Loader2,
   ArrowLeft, Phone, Video, Info, Sparkles, Smile, Camera, Mic, Image as PicIcon,
   Globe
 } from "lucide-react"
@@ -46,6 +46,8 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   /* ---------- THEN ---------- */
   const [type, setType] = useState<"text" | "card" | "media">("text")
   const [messageText, setMessageText] = useState("")
+  const [linkUrl, setLinkUrl] = useState("")
+  const [linkTitle, setLinkTitle] = useState("")
   const [cardTitle, setCardTitle] = useState("")
   const [cardSubtitle, setCardSubtitle] = useState("")
   const [cardImage, setCardImage] = useState("")
@@ -113,6 +115,8 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
     } else {
       setType("text"); setMessageText(content.message || "")
     }
+    setLinkUrl(content.link_url || "")
+    setLinkTitle(content.link_title || "")
     setQuickReplies((content.quick_replies || []).map((q: any, i: number) => ({ id: `${Date.now()}_qr${i}`, title: q.title, payload: q.payload })))
     setReplyMode(content.reply_mode || "both")
     setPublicReplies(content.public_replies || [])
@@ -242,9 +246,17 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
 
     if (type === "text") {
       content.message = messageText
+      if (linkUrl.trim()) {
+        content.link_url = linkUrl.trim()
+        content.link_title = linkTitle.trim() || "Open Link"
+      }
     } else if (type === "media") {
       content.media = { type: mediaType, url: mediaUrl.trim() }
       if (messageText.trim()) content.message = messageText
+      if (linkUrl.trim()) {
+        content.link_url = linkUrl.trim()
+        content.link_title = linkTitle.trim() || "Open Link"
+      }
     } else {
       const cleanButtons = buttons
         .map((b) => {
@@ -681,17 +693,68 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
                   </div>
 
                   {type === "text" && (
-                    <div className="space-y-2">
-                      <FieldLabel>DM Message Text</FieldLabel>
-                      <textarea
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        rows={5}
-                        maxLength={1000}
-                        className="w-full bg-muted/30 border border-border rounded-2xl px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-accent-yellow/50 transition-colors"
-                        placeholder="Type the message to send in DMs..."
-                      />
-                      <p className="font-mono-ui text-[10px] text-muted-foreground text-right">{messageText.length}/1000</p>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <FieldLabel>DM Message Text</FieldLabel>
+                        <textarea
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          rows={5}
+                          maxLength={1000}
+                          className="w-full bg-muted/30 border border-border rounded-2xl px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-accent-yellow/50 transition-colors"
+                          placeholder="Type the message to send in DMs..."
+                        />
+                        <p className="font-mono-ui text-[10px] text-muted-foreground text-right">{messageText.length}/1000</p>
+                      </div>
+
+                      {/* Separate Link & Button Configuration */}
+                      <div className="p-4 rounded-2xl bg-muted/20 border border-border space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Link2 className="w-4 h-4 text-accent-yellow" />
+                            <FieldLabel>Message Link Button (Optional)</FieldLabel>
+                          </div>
+                          {linkUrl && (
+                            <button
+                              type="button"
+                              onClick={() => { setLinkUrl(""); setLinkTitle(""); }}
+                              className="text-[11px] text-muted-foreground hover:text-red-400 transition-colors"
+                            >
+                              Clear link
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Attaches a native Instagram CTA button beneath your message instead of pasting raw links in the text.
+                        </p>
+                        <div className="grid sm:grid-cols-2 gap-3 pt-1">
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-medium text-muted-foreground">Button Label</label>
+                            <input
+                              type="text"
+                              value={linkTitle}
+                              onChange={(e) => setLinkTitle(e.target.value.slice(0, 20))}
+                              placeholder="e.g. Open Guide, Visit Site"
+                              className="w-full bg-muted/30 border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent-yellow/50 transition-colors"
+                            />
+                            <div className="flex justify-between text-[10px] text-muted-foreground">
+                              <span>Appears on button</span>
+                              <span>{linkTitle.length}/20</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-medium text-muted-foreground">Destination URL</label>
+                            <input
+                              type="url"
+                              value={linkUrl}
+                              onChange={(e) => setLinkUrl(e.target.value)}
+                              placeholder="https://..."
+                              className="w-full bg-muted/30 border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent-yellow/50 transition-colors font-mono"
+                            />
+                            <p className="text-[10px] text-muted-foreground">Where the button leads</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1012,8 +1075,16 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
                   <div className="flex justify-end items-end gap-1.5 animate-in fade-in zoom-in-95 duration-200">
                     <div className="max-w-[80%] space-y-1.5 flex flex-col items-end">
                       {type === "text" && (
-                        <div className="bg-[#3797f0] text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 text-xs whitespace-pre-wrap break-words leading-relaxed shadow-lg">
-                          {messageText || "Type message content..."}
+                        <div className="bg-[#3797f0] text-foreground rounded-2xl rounded-br-sm overflow-hidden shadow-lg w-full max-w-[240px]">
+                          <div className="px-4 py-2.5 text-xs whitespace-pre-wrap break-words leading-relaxed">
+                            {messageText || "Type message content..."}
+                          </div>
+                          {linkUrl && (
+                            <div className="border-t border-white/20 py-2.5 px-3 text-center text-xs font-semibold text-white bg-black/10 hover:bg-black/20 flex items-center justify-center gap-1.5 transition-colors cursor-pointer select-none">
+                              <span>{linkTitle.trim() || "Open Link"}</span>
+                              <ExternalLink className="w-3 h-3 opacity-80" />
+                            </div>
+                          )}
                         </div>
                       )}
                       {type === "card" && (

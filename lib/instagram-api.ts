@@ -82,7 +82,7 @@ export function buildButtonTemplateAttachment(text: string, buttons: IGButton[])
       type: "template",
       payload: {
         template_type: "button",
-        text: text.slice(0, 1000),
+        text: text.slice(0, 640),
         buttons: formattedButtons,
       },
     },
