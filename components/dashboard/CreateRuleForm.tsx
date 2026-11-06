@@ -26,6 +26,13 @@ interface CreateRuleFormProps {
   editRule?: Automation | null
 }
 
+const DEFAULT_PUBLIC_REPLIES = [
+  "sent you a dm",
+  "just sent. check your inbox",
+  "check your inbox now",
+  "check your dm's"
+]
+
 const STEPS = [
   { key: "trigger", label: "When", sub: "Choose what starts it" },
   { key: "response", label: "Reply", sub: "Write what people receive" },
@@ -47,7 +54,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
   const [type, setType] = useState<"text" | "card" | "media">("text")
   const [messageText, setMessageText] = useState("")
   const [linkUrl, setLinkUrl] = useState("")
-  const [linkTitle, setLinkTitle] = useState("")
+  const [linkTitle, setLinkTitle] = useState("Open Guide")
   const [cardTitle, setCardTitle] = useState("")
   const [cardSubtitle, setCardSubtitle] = useState("")
   const [cardImage, setCardImage] = useState("")
@@ -58,7 +65,7 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
 
   /* ---------- Public comment reply ---------- */
   const [replyMode, setReplyMode] = useState<"both" | "dm_only" | "public_only">("both")
-  const [publicReplies, setPublicReplies] = useState<string[]>([])
+  const [publicReplies, setPublicReplies] = useState<string[]>(DEFAULT_PUBLIC_REPLIES)
   const [includeReplies, setIncludeReplies] = useState(false)
 
   /* ---------- EXTRAS ---------- */
@@ -116,10 +123,10 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
       setType("text"); setMessageText(content.message || "")
     }
     setLinkUrl(content.link_url || "")
-    setLinkTitle(content.link_title || "")
+    setLinkTitle(content.link_title || "Open Guide")
     setQuickReplies((content.quick_replies || []).map((q: any, i: number) => ({ id: `${Date.now()}_qr${i}`, title: q.title, payload: q.payload })))
     setReplyMode(content.reply_mode || "both")
-    setPublicReplies(content.public_replies || [])
+    setPublicReplies(content.public_replies && content.public_replies.length > 0 ? content.public_replies : DEFAULT_PUBLIC_REPLIES)
     setIncludeReplies(content.include_replies === true)
     setCheckFollow(content.check_follow === true)
     setFollowGateMessage(content.follow_gate_message || "")
@@ -700,11 +707,18 @@ export function CreateRuleForm({ userId, triggerSource, onSuccess, editRule }: C
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
                           rows={5}
-                          maxLength={1000}
+                          maxLength={linkUrl.trim() ? 640 : 1000}
                           className="w-full bg-muted/30 border border-border rounded-2xl px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-accent-yellow/50 transition-colors"
                           placeholder="Type the message to send in DMs..."
                         />
-                        <p className="font-mono-ui text-[10px] text-muted-foreground text-right">{messageText.length}/1000</p>
+                        <div className="flex justify-between items-center text-[10px] font-mono-ui">
+                          <span className="text-muted-foreground">
+                            {linkUrl.trim() ? "⚡ Button Template limit: max 640 chars" : "Standard text limit: max 1000 chars"}
+                          </span>
+                          <span className={messageText.length > (linkUrl.trim() ? 640 : 1000) ? "text-red-400 font-bold" : "text-muted-foreground"}>
+                            {messageText.length}/{linkUrl.trim() ? 640 : 1000}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Separate Link & Button Configuration */}

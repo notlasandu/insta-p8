@@ -22,7 +22,10 @@ export const automationTools = [
         triggerSource: { type: 'string', enum: ['comment', 'dm', 'story'], description: 'Trigger origin' },
         triggerType: { type: 'string', enum: ['keyword', 'reply_all'], description: 'Match type' },
         triggerValue: { type: 'string', description: 'Comma-separated trigger keywords (e.g. "price, details")' },
-        responseMessage: { type: 'string', description: 'The text message or payload sent to the user' },
+        responseMessage: { type: 'string', description: 'The text message sent to the user (Meta limit: max 1000 chars for regular text, max 640 chars if linkUrl is attached)' },
+        linkUrl: { type: 'string', description: 'Optional destination URL to attach as a native Instagram message CTA button (e.g. https://...)' },
+        linkTitle: { type: 'string', description: 'Optional button label (max 20 chars, default: "Open Guide")' },
+        publicReplies: { type: 'array', items: { type: 'string' }, description: 'Optional rotation of public comment replies (defaults to 4 human-like phrases)' },
         checkFollow: { type: 'boolean', description: 'Require user to follow your account before unlocking' },
         replyMode: { type: 'string', enum: ['dm_only', 'both', 'public_only'], description: 'For comment triggers' }
       },
@@ -138,11 +141,54 @@ export async function handleAutomationTools(name: string, args: any) {
   if (name === 'create_automation') {
     const triggerSource = args.triggerSource;
     const triggerType = args.triggerType || 'keyword';
-    const content = {
-      message: args.responseMessage,
+    const message = (args.responseMessage || '').trim();
+
+    if (!message) {
+      throw new Error('Guardrail: responseMessage cannot be empty.');
+    }
+
+    const linkUrl = args.linkUrl ? String(args.linkUrl).trim() : undefined;
+    const linkTitle = (args.linkTitle ? String(args.linkTitle).trim() : 'Open Guide').slice(0, 20);
+
+    // Meta platform character limit guardrails
+    if (linkUrl) {
+      if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+        throw new Error('Guardrail: linkUrl must be a valid URL starting with http:// or https://');
+      }
+      if (message.length > 640) {
+        throw new Error(`Guardrail: Message length (${message.length} chars) exceeds Meta's 640 character limit for Button Templates. Please shorten your message.`);
+      }
+      if (args.linkTitle && String(args.linkTitle).trim().length > 20) {
+        throw new Error(`Guardrail: Button label '${args.linkTitle}' exceeds Meta's 20 character limit (current: ${String(args.linkTitle).trim().length} chars).`);
+      }
+    } else {
+      if (message.length > 1000) {
+        throw new Error(`Guardrail: Message length (${message.length} chars) exceeds Meta's 1000 character limit for direct messages.`);
+      }
+    }
+
+    const defaultPublicReplies = [
+      'sent you a dm',
+      'just sent. check your inbox',
+      'check your inbox now',
+      "check your dm's"
+    ];
+
+    const publicReplies = Array.isArray(args.publicReplies) && args.publicReplies.length > 0
+      ? args.publicReplies
+      : defaultPublicReplies;
+
+    const content: any = {
+      message,
       check_follow: args.checkFollow === true,
-      reply_mode: args.replyMode || 'both'
+      reply_mode: args.replyMode || 'both',
+      public_replies: publicReplies
     };
+
+    if (linkUrl) {
+      content.link_url = linkUrl;
+      content.link_title = linkTitle;
+    }
 
     const { data, error } = await supabase
       .from('automations')

@@ -31,7 +31,9 @@ export const inboxTools = [
       type: 'object',
       properties: {
         conversationId: { type: 'string', description: 'Conversation UUID in database' },
-        message: { type: 'string', description: 'Message copy to send (max 1000 characters)' }
+        message: { type: 'string', description: 'Message copy to send (max 1000 chars, max 640 chars if linkUrl is attached)' },
+        linkUrl: { type: 'string', description: 'Optional destination URL to attach as a native CTA button' },
+        linkTitle: { type: 'string', description: 'Optional button label (max 20 chars, default: "Open Guide")' }
       },
       required: ['conversationId', 'message']
     }
@@ -129,7 +131,25 @@ export async function handleInboxTools(name: string, args: any) {
   if (name === 'send_direct_message') {
     const messageText = (args?.message || '').trim();
     if (!messageText) throw new Error('Guardrail: Message body cannot be empty.');
-    if (messageText.length > 1000) throw new Error('Guardrail: Message exceeds maximum limit of 1000 characters.');
+
+    const linkUrl = args?.linkUrl ? String(args.linkUrl).trim() : undefined;
+    const linkTitle = (args?.linkTitle ? String(args.linkTitle).trim() : 'Open Guide').slice(0, 20);
+
+    if (linkUrl) {
+      if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+        throw new Error('Guardrail: linkUrl must be a valid URL starting with http:// or https://');
+      }
+      if (messageText.length > 640) {
+        throw new Error(`Guardrail: Message exceeds Meta's 640 character limit for Button Templates (current: ${messageText.length} chars).`);
+      }
+      if (args?.linkTitle && String(args.linkTitle).trim().length > 20) {
+        throw new Error(`Guardrail: Button label '${args.linkTitle}' exceeds Meta's 20 character limit (current: ${String(args.linkTitle).trim().length} chars).`);
+      }
+    } else {
+      if (messageText.length > 1000) {
+        throw new Error(`Guardrail: Message exceeds maximum limit of 1000 characters (current: ${messageText.length} chars).`);
+      }
+    }
 
     const { data: conv, error: convErr } = await supabase
       .from('conversations')
@@ -142,12 +162,31 @@ export async function handleInboxTools(name: string, args: any) {
     const recipientId = conv.recipient_id;
     const isFb = conv.platform === 'facebook';
 
+    const messagePayload = linkUrl
+      ? {
+          attachment: {
+            type: 'template',
+            payload: {
+              template_type: 'button',
+              text: messageText.slice(0, 640),
+              buttons: [
+                {
+                  type: 'web_url',
+                  url: linkUrl,
+                  title: linkTitle
+                }
+              ]
+            }
+          }
+        }
+      : { text: messageText };
+
     const sendRes = await fetch(`https://graph.facebook.com/v21.0/me/messages?access_token=${encodeURIComponent(user.access_token)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         recipient: { id: recipientId },
-        message: { text: messageText }
+        message: messagePayload
       })
     });
 
