@@ -468,25 +468,28 @@ export async function POST(request: NextRequest) {
                           console.log(`[webhook] ✅ Comment by follower @${senderId}: delivering content directly for rule "${match.name}"`)
                           await sendAutomationResponse(user.access_token, { comment_id: commentId }, content, { platform })
                         } else {
-                          const optIn = resolveOptInMessage(content.opt_in_message, content.opt_in_button, user.ai_context, match.name)
-                          console.log(`[webhook] 📩 Sending comment opt-in prompt to @${senderId} for rule "${match.name}"`)
+                          console.log(`[webhook] 🔒 Comment follower gate: @${senderId} is not following — sending gate prompt for rule "${match.name}"`)
+                          const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, platform)
                           
                           const btnResult = await sendButtonTemplateDM(
                             user.access_token,
                             { comment_id: commentId },
-                            optIn.text,
-                            [{ type: "postback", title: optIn.buttonTitle, payload: `CLAIM_CONTENT_${match.id}` }],
+                            greeting.fullText,
+                            [{ type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${match.id}` }],
                             platform,
                           )
                           if (!btnResult.ok) {
                             await sendCardDM(
                               user.access_token,
                               { comment_id: commentId },
-                              {
-                                title: optIn.text.slice(0, 80),
-                                subtitle: optIn.text.length > 80 ? optIn.text.slice(80, 160) : undefined,
-                                buttons: [{ type: "postback", title: optIn.buttonTitle, payload: `CLAIM_CONTENT_${match.id}` }],
-                              },
+                              buildFollowGateCard({
+                                username: user.username,
+                                ruleId: match.id,
+                                title: greeting.title,
+                                subtitle: greeting.subtitle,
+                                platform: platform,
+                                pageId: user.page_id,
+                              }),
                               platform,
                             )
                           }
@@ -711,6 +714,22 @@ export async function POST(request: NextRequest) {
                           match = automations.find((a: any) => a.id === pendingRuleId)
                         }
                         if (!match) {
+                          const { data: latestComment } = await supabase
+                            .from("post_comments")
+                            .select("post_id, text")
+                            .eq("sender_id", senderId)
+                            .order("created_at", { ascending: false })
+                            .limit(1)
+
+                          if (latestComment?.[0]) {
+                            match = automations.find((a: any) =>
+                              a.trigger_source === "comment" &&
+                              matchesMedia(a.specific_media_id, latestComment[0].post_id) &&
+                              (a.trigger_type === "reply_all" || keywordMatches(a.trigger_value, latestComment[0].text))
+                            )
+                          }
+                        }
+                        if (!match) {
                           match = automations.find((a: any) => a.trigger_source === "comment") || automations[0]
                         }
                         if (match) {
@@ -729,6 +748,22 @@ export async function POST(request: NextRequest) {
                         let pendingRuleId = attempts?.[0]?.key?.split("::")?.[1]
                         if (pendingRuleId) {
                           match = automations.find((a: any) => a.id === pendingRuleId)
+                        }
+                        if (!match) {
+                          const { data: latestComment } = await supabase
+                            .from("post_comments")
+                            .select("post_id, text")
+                            .eq("sender_id", senderId)
+                            .order("created_at", { ascending: false })
+                            .limit(1)
+
+                          if (latestComment?.[0]) {
+                            match = automations.find((a: any) =>
+                              a.trigger_source === "comment" &&
+                              matchesMedia(a.specific_media_id, latestComment[0].post_id) &&
+                              (a.trigger_type === "reply_all" || keywordMatches(a.trigger_value, latestComment[0].text))
+                            )
+                          }
                         }
                         if (!match) {
                           match = automations.find((a: any) => {
