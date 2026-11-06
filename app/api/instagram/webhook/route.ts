@@ -468,28 +468,24 @@ export async function POST(request: NextRequest) {
                           console.log(`[webhook] ✅ Comment by follower @${senderId}: delivering content directly for rule "${match.name}"`)
                           await sendAutomationResponse(user.access_token, { comment_id: commentId }, content, { platform })
                         } else {
-                          console.log(`[webhook] 🔒 Comment follower gate: @${senderId} is not following — sending gate prompt for rule "${match.name}"`)
-                          const greeting = resolveFollowGreeting(content.follow_gate_message, user.ai_context, user.username, platform)
+                          console.log(`[webhook] 🔒 Comment follower gate: @${senderId} is not following — sending opt-in prompt for rule "${match.name}"`)
+                          const optIn = resolveOptInMessage(content.opt_in_message, content.opt_in_button, user.ai_context, match.name)
+                          const buttonTitle = (optIn.buttonTitle || "Send me the guide").slice(0, 20)
                           
-                          const btnResult = await sendButtonTemplateDM(
+                          // Send Quick Reply chip so tapping sends a REAL text message instead of a dropped postback
+                          const qrResult = await sendTextDM(
                             user.access_token,
                             { comment_id: commentId },
-                            greeting.fullText,
-                            [{ type: "postback", title: "Following", payload: `UNLOCK_CONTENT_${match.id}` }],
+                            optIn.text,
+                            [{ title: buttonTitle, payload: `CLAIM_CONTENT_${match.id}` }],
                             platform,
                           )
-                          if (!btnResult.ok) {
-                            await sendCardDM(
+                          if (!qrResult.ok) {
+                            await sendButtonTemplateDM(
                               user.access_token,
                               { comment_id: commentId },
-                              buildFollowGateCard({
-                                username: user.username,
-                                ruleId: match.id,
-                                title: greeting.title,
-                                subtitle: greeting.subtitle,
-                                platform: platform,
-                                pageId: user.page_id,
-                              }),
+                              optIn.text,
+                              [{ type: "postback", title: buttonTitle, payload: `CLAIM_CONTENT_${match.id}` }],
                               platform,
                             )
                           }
@@ -701,7 +697,7 @@ export async function POST(request: NextRequest) {
 
                     if (!isClaimEvent && !isUnlockEvent && triggerType === "keyword") {
                       const normVal = triggerValue.toLowerCase().trim()
-                      if (["send me the guide", "send the guide", "send guide", "send it", "claim"].some(k => normVal.includes(k))) {
+                      if (["send me the guide", "send the guide", "send guide", "send it", "claim", "get the guide", "get guide"].some(k => normVal.includes(k))) {
                         const { data: attempts } = await supabase
                           .from("unlock_attempts")
                           .select("key")
