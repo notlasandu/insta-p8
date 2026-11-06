@@ -27,7 +27,10 @@ export function unlockKey(senderId: string, ruleId: string): string {
 
 async function deleteAttempt(key: string): Promise<void> {
   try {
-    await supabaseLazy().from("unlock_attempts").delete().eq("key", key)
+    const { error } = await (supabaseLazy() as any).rpc("clear_unlock_attempt", { p_key: key })
+    if (error) {
+      await supabaseLazy().from("unlock_attempts").delete().eq("key", key)
+    }
   } catch {
     // Swallow
   }
