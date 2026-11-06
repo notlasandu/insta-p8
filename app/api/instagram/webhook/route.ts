@@ -254,6 +254,23 @@ export async function POST(request: NextRequest) {
     
     const signature = request.headers.get("x-hub-signature-256")
     console.log(`[webhook] Signature Header: ${signature}`)
+
+    // 1. Log every raw incoming hit directly to Supabase webhook_events table
+    const supabase = await getSupabaseServerClient()
+    try {
+      await supabase.from("webhook_events").insert({
+        event_type: "raw_incoming",
+        data: {
+          signature,
+          rawBody: rawBody.slice(0, 50000),
+          headers: Object.fromEntries(request.headers.entries()),
+          time: new Date().toISOString(),
+        },
+      })
+    } catch (err) {
+      console.warn("[webhook] Failed to log raw event to webhook_events:", err)
+    }
+
     if (!isValidSignature(rawBody, signature)) {
       // Hash prefixes are safe to log and let us tell a wrong secret from a mutated body.
       const computed = APP_SECRETS.map(
@@ -274,7 +291,6 @@ export async function POST(request: NextRequest) {
     if (!body.entry) return NextResponse.json({ ok: true })
     // Ensure schema is up-to-date on every cold start (idempotent, no-op if all tables exist)
     ensureSchema().catch((e) => console.warn("[webhook] ensureSchema failed:", e?.message))
-    const supabase = await getSupabaseServerClient()
 
     for (const entry of body.entry) {
       // Skip pure system events (echo / read / delivery)
@@ -686,6 +702,9 @@ export async function POST(request: NextRequest) {
           }
           return conv
           })()
+
+          // Always ensure incoming message is persisted immediately so no events are lost
+          const conv = await incomingSaved
 
           try {
           // ---------- Match automation ----------
