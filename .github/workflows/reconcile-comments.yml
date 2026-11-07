@@ -1,0 +1,27 @@
+name: Hourly Reconcile Missed Comments
+
+on:
+  schedule:
+    # Runs at :30 every hour from 02:30 to 17:30 UTC (8:00 AM to 11:00 PM Sri Lanka time, GMT+5:30)
+    - cron: '30 2-17 * * *'
+  workflow_dispatch:
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Reconcile Comments Endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'b7567cc9b677a01a0aea376d4a7c6ac9' }}
+        run: |
+          echo "Triggering Vercel reconciliation endpoint..."
+          response=$(curl -s -w "\n%{http_code}" -X POST "https://insta-p8-orpin.vercel.app/api/cron/reconcile-comments" \
+            -H "Authorization: Bearer $CRON_SECRET")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          echo "Response HTTP Code: $http_code"
+          echo "Response Body: $body"
+          if [ "$http_code" -ne 200 ]; then
+            echo "Failed with HTTP $http_code"
+            exit 1
+          fi
