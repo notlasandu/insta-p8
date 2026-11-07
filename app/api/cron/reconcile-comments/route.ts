@@ -183,9 +183,17 @@ async function handleReconcile(request: NextRequest) {
       for (const comment of json.data) {
         if (!comment.id || !comment.text) continue
 
-        // Check timeframe
+        // Check timeframe: must be within last 48 hours
         const commentTime = new Date(comment.timestamp).getTime()
         if (commentTime < cutoffTime) continue
+
+        // Anti-race condition buffer: Ignore comments younger than 5 minutes
+        // This ensures the real-time webhook has full priority to process without overlap
+        const commentAgeMs = now - commentTime
+        if (commentAgeMs < 5 * 60 * 1000) {
+          console.log(`[reconcile] ⏳ Comment ${comment.id} is under 5 mins old; skipping to allow real-time webhook to process`)
+          continue
+        }
 
         const senderId = comment.from?.id
         const senderUsername = comment.from?.username || "unknown"
@@ -206,6 +214,18 @@ async function handleReconcile(request: NextRequest) {
         }
 
         if (!matchedRule) continue
+
+        // Anti-race condition database check:
+        // If the webhook already received and cached this comment, skip it
+        const { data: cachedComment } = await supabase
+          .from("post_comments")
+          .select("id")
+          .eq("id", comment.id)
+          .maybeSingle()
+
+        if (cachedComment) {
+          continue
+        }
 
         // Check if comment already has a reply on Instagram
         const replyRes = await fetch(
