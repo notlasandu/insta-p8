@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { resolveAccessToken, fetchInstagramData, fetchFacebookData } from './meta-client';
+import { resolveAccountCredentials, fetchInstagramData, fetchFacebookData } from './meta-client';
 import { persistSyncData } from './supabase-writer';
 import type { SyncResult } from './types';
 
@@ -53,14 +53,19 @@ async function executeAccountSync(accountId: string, force: boolean): Promise<Sy
   }
 
   try {
-    const token = await resolveAccessToken(supabase);
-    const igAccountId = process.env.IG_ACCOUNT_ID || '17841423877461958';
-    const fbPageId = process.env.FB_PAGE_ID || '1353894244476166';
+    const { igAccountId, fbPageId, token } = await resolveAccountCredentials(supabase, accountId);
 
-    const [igData, fbData] = await Promise.all([
-      fetchInstagramData(token, igAccountId),
-      fetchFacebookData(token, fbPageId)
-    ]);
+    const igDataPromise = fetchInstagramData(token, igAccountId);
+    const fbDataPromise = fetchFacebookData(token, fbPageId).catch((err) => {
+      console.warn(`[sync] Failed to fetch Facebook data for ${accountId}:`, err?.message || err);
+      return {
+        profile: { name: '', followers_count: 0 },
+        insights: [],
+        posts: []
+      };
+    });
+
+    const [igData, fbData] = await Promise.all([igDataPromise, fbDataPromise]);
 
     await persistSyncData(supabase, accountId, {
       igProfile: igData.profile,

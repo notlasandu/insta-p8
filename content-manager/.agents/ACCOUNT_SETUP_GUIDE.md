@@ -62,10 +62,20 @@ Open `src/lib/data/accounts_registry.json`. This file contains an array of all c
     "id": "[account_id]",
     "name": "[account_name]",
     "avatar_url": "[avatar_url]",
-    "description": "[description]"
+    "description": "[description]",
+    "ig_account_id": "[instagram_business_account_id]",
+    "fb_page_id": "[optional_facebook_page_id]",
+    "access_token": "[optional_if_separate_from_global_token]"
   }
 ]
 ```
+
+*Credential Resolution Hierarchy:*
+The sync engine resolves credentials in this order:
+1. Direct fields in `accounts_registry.json` (`ig_account_id`, `fb_page_id`, `access_token`).
+2. Environment variables (e.g. `IG_ACCOUNT_ID_<ACCOUNT_ID>`, `FB_PAGE_ID_<ACCOUNT_ID>`, `ACCESS_TOKEN_<ACCOUNT_ID>`).
+3. Supabase `users` table matching `username = [account_id]`.
+4. Global environment variables (`IG_ACCOUNT_ID`, `FB_PAGE_ID`, `ACCESS_TOKEN`).
 
 ## Step 4: Content Generation Pipeline (Optional)
 

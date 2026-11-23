@@ -43,7 +43,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {#each accounts as account}
           <a href={resolve(`/a/${account.id}`)} class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all flex flex-col items-center text-center">
-            <img src={account.avatar_url} alt={account.name} class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-slate-50 dark:border-slate-800 shadow-sm mb-3 sm:mb-4 group-hover:scale-105 transition-transform" />
+            <img src={account.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(account.name || account.id)}&background=random`} alt={account.name} class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-slate-50 dark:border-slate-800 shadow-sm mb-3 sm:mb-4 group-hover:scale-105 transition-transform" />
             <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{account.name}</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{account.description}</p>
           </a>

@@ -1,8 +1,9 @@
 name: Daily Meta Historical Sync (Instagram & Facebook)
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  # Scheduled cron disabled in favor of cron-job.org
+  # schedule:
+  #   - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:

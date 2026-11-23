@@ -65,10 +65,10 @@
   let isDataValid = $derived(rawData && !Array.isArray(rawData) && Object.keys(rawData).length > 0);
   
   let profileInfo = $derived(isDataValid && rawData.profile_info ? rawData.profile_info : {
-    name: 'copiumbuilder',
-    profile_picture_url: 'https://ui-avatars.com/api/?name=CB&background=random',
+    name: data.account || 'Account',
+    profile_picture_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.account || 'Account')}&background=random`,
     biography: '',
-    username: 'copiumbuilder',
+    username: data.account || 'Account',
     media_count: 0,
     followers_count: 0,
     id: 'unknown',

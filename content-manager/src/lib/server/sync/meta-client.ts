@@ -1,9 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MetaProfile, FacebookProfile, MetricItem, NormalizedPost } from './types';
 import { fetchFbVideoInsights } from './fb-video-insights';
+import registry from '$lib/data/accounts_registry.json';
 
 const API_VERSION = 'v21.0';
 const BASE_URL = `https://graph.facebook.com/${API_VERSION}`;
+
+export interface AccountCredentials {
+  igAccountId: string;
+  fbPageId: string | null;
+  token: string;
+}
 
 export async function resolveAccessToken(supabase: SupabaseClient): Promise<string> {
   const envToken = process.env.ACCESS_TOKEN || process.env.IG_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN;
@@ -18,6 +25,73 @@ export async function resolveAccessToken(supabase: SupabaseClient): Promise<stri
 
   if (userRow?.access_token) return userRow.access_token;
   throw new Error('Missing Meta Access Token in environment and database.');
+}
+
+export async function resolveAccountCredentials(supabase: SupabaseClient, accountId: string): Promise<AccountCredentials> {
+  const cleanId = accountId.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+
+  const registryList = (registry || []) as Array<{
+    id: string;
+    ig_account_id?: string;
+    fb_page_id?: string;
+    access_token?: string;
+  }>;
+  const registryEntry = registryList.find((a) => a.id === accountId);
+
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('access_token, business_account_id, page_id')
+    .eq('username', accountId)
+    .maybeSingle();
+
+  let fallbackUserRow = null;
+  if (!userRow && accountId === 'copiumbuilder') {
+    const { data: latestUser } = await supabase
+      .from('users')
+      .select('access_token, business_account_id, page_id')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    fallbackUserRow = latestUser;
+  }
+
+  const token =
+    process.env[`ACCESS_TOKEN_${cleanId}`] ||
+    process.env[`IG_ACCESS_TOKEN_${cleanId}`] ||
+    process.env[`META_ACCESS_TOKEN_${cleanId}`] ||
+    registryEntry?.access_token ||
+    userRow?.access_token ||
+    fallbackUserRow?.access_token ||
+    process.env.ACCESS_TOKEN ||
+    process.env.IG_ACCESS_TOKEN ||
+    process.env.META_ACCESS_TOKEN;
+
+  if (!token) {
+    throw new Error(`Missing Meta Access Token for account "${accountId}". Please set ACCESS_TOKEN or configure it in users table / accounts_registry.json.`);
+  }
+
+  const igAccountId =
+    process.env[`IG_ACCOUNT_ID_${cleanId}`] ||
+    registryEntry?.ig_account_id ||
+    userRow?.business_account_id?.toString() ||
+    fallbackUserRow?.business_account_id?.toString() ||
+    (accountId === 'copiumbuilder' ? (process.env.IG_ACCOUNT_ID || '17841423877461958') : '');
+
+  if (!igAccountId) {
+    throw new Error(
+      `Missing Instagram Account ID for "${accountId}". Please configure "ig_account_id" in accounts_registry.json or set IG_ACCOUNT_ID_${cleanId} in your environment.`
+    );
+  }
+
+  const fbPageId =
+    process.env[`FB_PAGE_ID_${cleanId}`] ||
+    registryEntry?.fb_page_id ||
+    userRow?.page_id ||
+    fallbackUserRow?.page_id ||
+    (accountId === 'copiumbuilder' ? (process.env.FB_PAGE_ID || '1353894244476166') : null) ||
+    null;
+
+  return { igAccountId, fbPageId, token };
 }
 
 export async function fetchMetaEndpoint(endpoint: string, params: Record<string, string>, token: string) {
@@ -78,10 +152,18 @@ export async function fetchInstagramData(token: string, igAccountId: string) {
   return { profile, insights, media, mediaInsights: mediaInsightsRecord };
 }
 
-export async function fetchFacebookData(token: string, pageId: string) {
+export async function fetchFacebookData(token: string, pageId?: string | null) {
+  if (!pageId) {
+    return {
+      profile: { name: '', followers_count: 0 } as FacebookProfile,
+      insights: [] as MetricItem[],
+      posts: [] as NormalizedPost[]
+    };
+  }
+
   const profilePromise = fetchMetaEndpoint(pageId, {
     fields: 'id,name,fan_count,followers_count,picture,about,link'
-  }, token) as Promise<FacebookProfile>;
+  }, token).catch(() => ({ name: 'Facebook Page', followers_count: 0 } as FacebookProfile)) as Promise<FacebookProfile>;
 
   const insightsPromise = fetchMetaEndpoint(`${pageId}/insights`, {
     metric: 'page_total_media_view_unique,page_media_view,page_post_engagements,page_daily_follows,page_views_total,page_video_views,page_total_actions',
