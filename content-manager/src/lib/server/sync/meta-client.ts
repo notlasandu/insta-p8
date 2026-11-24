@@ -121,7 +121,7 @@ export async function fetchInstagramData(token: string, igAccountId: string) {
   }, token).then((res) => (res.data || []) as MetricItem[]).catch(() => [] as MetricItem[]);
 
   const mediaPromise = fetchMetaEndpoint(`${igAccountId}/media`, {
-    fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count'
+    fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,is_shared_to_feed'
   }, token).then((res) => res.data || []).catch(() => []);
 
   const [profile, insights, media] = await Promise.all([profilePromise, insightsPromise, mediaPromise]);

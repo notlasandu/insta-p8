@@ -5,6 +5,7 @@ export const GET: RequestHandler = async ({ url }) => {
   const account = url.searchParams.get('account') || 'copiumbuilder';
   const limitParam = parseInt(url.searchParams.get('limit') || '6', 10);
   const limit = Math.min(Math.max(1, isNaN(limitParam) ? 6 : limitParam), 24);
+  const includeTrials = url.searchParams.get('include_trials') === 'true';
 
   try {
     const supabase = getServerSupabase();
@@ -21,14 +22,23 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const rawPosts: any[] = snapshot?.media_posts || [];
 
-    // Filter for video/reels first, fallback to all if none
-    const videoPosts = rawPosts.filter((p) => p.media_type === 'VIDEO');
-    const sourcePosts = videoPosts.length > 0 ? videoPosts : rawPosts;
+    // Filter for videos first
+    let videoPosts = rawPosts.filter((p) => p.media_type === 'VIDEO');
+    if (videoPosts.length === 0) {
+      videoPosts = rawPosts;
+    }
 
-    const formattedVideos = sourcePosts.slice(0, limit).map((post) => {
+    // Exclude trial reels unless explicitly requested
+    // Trial reels have is_shared_to_feed: false
+    const filteredPosts = includeTrials
+      ? videoPosts
+      : videoPosts.filter((p) => p.is_shared_to_feed !== false);
+
+    const formattedVideos = filteredPosts.slice(0, limit).map((post) => {
       const caption = post.caption || '';
       const firstLine = caption.split('\n')[0].trim().replace(/^Video\s+\d+\s*[-–:]\s*/i, '');
       const title = firstLine.length > 0 ? firstLine : 'Instagram Reel';
+      const isTrial = post.is_shared_to_feed === false;
 
       return {
         id: post.id,
@@ -39,7 +49,9 @@ export const GET: RequestHandler = async ({ url }) => {
         video_url: post.media_url || '',
         likes: post.like_count ?? 0,
         comments: post.comments_count ?? 0,
-        date: post.timestamp
+        date: post.timestamp,
+        is_trial: isTrial,
+        is_shared_to_feed: post.is_shared_to_feed ?? true
       };
     });
 
