@@ -2,13 +2,25 @@ import { supabase, getDefaultUser } from '../db.js';
 export const automationTools = [
     {
         name: 'list_automations',
-        description: 'List all automated comment-to-DM, story reply, and direct message keyword rules.',
+        description: 'List all automated comment-to-DM, story reply, and direct message keyword rules with full details including response_content (message, link_url, link_title, reply_mode, public_replies, check_follow), specific_media_id, and active status.',
         inputSchema: {
             type: 'object',
             properties: {
                 triggerSource: { type: 'string', enum: ['all', 'comment', 'dm', 'story'] },
-                activeOnly: { type: 'boolean', description: 'Filter only active automations' }
+                activeOnly: { type: 'boolean', description: 'Filter only active automations' },
+                search: { type: 'string', description: 'Optional case-insensitive filter matching automation name, trigger keywords, or link URL' }
             }
+        }
+    },
+    {
+        name: 'get_automation',
+        description: 'Get full details of a single automation rule by its UUID, including response_content (message, link_url, link_title, public_replies, reply_mode) and media targeting.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                automationId: { type: 'string', description: 'UUID of the automation' }
+            },
+            required: ['automationId']
         }
     },
     {
@@ -29,6 +41,29 @@ export const automationTools = [
                 replyMode: { type: 'string', enum: ['dm_only', 'both', 'public_only'], description: 'For comment triggers' }
             },
             required: ['name', 'triggerSource', 'triggerValue', 'responseMessage']
+        }
+    },
+    {
+        name: 'update_automation',
+        description: 'Edit an existing automation rule. Supports partial updates — pass only the fields you want to change (e.g. linkUrl, linkTitle, responseMessage, triggerValue, name, publicReplies, replyMode, checkFollow, specificMediaId, isActive). Pass an empty string "" for linkUrl to remove the CTA button.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                automationId: { type: 'string', description: 'UUID of the automation to update' },
+                name: { type: 'string', description: 'Updated descriptive title of the automation' },
+                triggerSource: { type: 'string', enum: ['comment', 'dm', 'story'], description: 'Updated trigger origin' },
+                triggerType: { type: 'string', enum: ['keyword', 'reply_all'], description: 'Updated match type' },
+                triggerValue: { type: 'string', description: 'Updated comma-separated trigger keywords' },
+                responseMessage: { type: 'string', description: 'Updated DM text message (Meta limit: max 1000 chars, or max 640 chars if linkUrl is attached)' },
+                linkUrl: { type: 'string', description: 'Updated CTA button URL (must start with http:// or https://), or "" to remove the link button' },
+                linkTitle: { type: 'string', description: 'Updated CTA button label (max 20 chars)' },
+                publicReplies: { type: 'array', items: { type: 'string' }, description: 'Updated rotation of public comment replies' },
+                checkFollow: { type: 'boolean', description: 'Require user to follow your account before unlocking' },
+                replyMode: { type: 'string', enum: ['dm_only', 'both', 'public_only'], description: 'For comment triggers' },
+                specificMediaId: { type: 'string', description: 'Comma-separated Instagram media IDs to target, or "" to target all posts' },
+                isActive: { type: 'boolean', description: 'Activate or pause the automation' }
+            },
+            required: ['automationId']
         }
     },
     {
@@ -105,6 +140,25 @@ export const automationTools = [
         }
     }
 ];
+function validateMetaResponseLimits(message, linkUrl, linkTitle) {
+    if (!message) {
+        throw new Error('Guardrail: responseMessage cannot be empty.');
+    }
+    if (linkUrl) {
+        if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+            throw new Error('Guardrail: linkUrl must be a valid URL starting with http:// or https://');
+        }
+        if (message.length > 640) {
+            throw new Error(`Guardrail: Message length (${message.length} chars) exceeds Meta's 640 character limit for Button Templates. Please shorten your message.`);
+        }
+        if (linkTitle && linkTitle.length > 20) {
+            throw new Error(`Guardrail: Button label '${linkTitle}' exceeds Meta's 20 character limit (current: ${linkTitle.length} chars).`);
+        }
+    }
+    else if (message.length > 1000) {
+        throw new Error(`Guardrail: Message length (${message.length} chars) exceeds Meta's 1000 character limit for direct messages.`);
+    }
+}
 export async function handleAutomationTools(name, args) {
     const user = await getDefaultUser();
     if (!user)
@@ -124,11 +178,40 @@ export async function handleAutomationTools(name, args) {
         const { data, error } = await query;
         if (error)
             throw new Error(error.message);
+        let results = data || [];
+        if (args?.search && String(args.search).trim()) {
+            const needle = String(args.search).trim().toLowerCase();
+            results = results.filter((row) => {
+                const nameMatch = String(row.name || '').toLowerCase().includes(needle);
+                const triggerMatch = String(row.trigger_value || '').toLowerCase().includes(needle);
+                const linkMatch = String(row.response_content?.link_url || '').toLowerCase().includes(needle);
+                return nameMatch || triggerMatch || linkMatch;
+            });
+        }
         return {
             content: [
                 {
                     type: 'text',
-                    text: JSON.stringify({ count: data?.length || 0, automations: data || [] }, null, 2)
+                    text: JSON.stringify({ count: results.length, automations: results }, null, 2)
+                }
+            ]
+        };
+    }
+    if (name === 'get_automation') {
+        const { data, error } = await supabase
+            .from('automations')
+            .select('*')
+            .eq('id', args.automationId)
+            .eq('user_id', user.id)
+            .single();
+        if (error || !data) {
+            throw new Error(`Automation not found: ${error?.message || args.automationId}`);
+        }
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({ automation: data }, null, 2)
                 }
             ]
         };
@@ -137,28 +220,10 @@ export async function handleAutomationTools(name, args) {
         const triggerSource = args.triggerSource;
         const triggerType = args.triggerType || 'keyword';
         const message = (args.responseMessage || '').trim();
-        if (!message) {
-            throw new Error('Guardrail: responseMessage cannot be empty.');
-        }
         const linkUrl = args.linkUrl ? String(args.linkUrl).trim() : undefined;
-        const linkTitle = (args.linkTitle ? String(args.linkTitle).trim() : 'Open Guide').slice(0, 20);
-        // Meta platform character limit guardrails
-        if (linkUrl) {
-            if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
-                throw new Error('Guardrail: linkUrl must be a valid URL starting with http:// or https://');
-            }
-            if (message.length > 640) {
-                throw new Error(`Guardrail: Message length (${message.length} chars) exceeds Meta's 640 character limit for Button Templates. Please shorten your message.`);
-            }
-            if (args.linkTitle && String(args.linkTitle).trim().length > 20) {
-                throw new Error(`Guardrail: Button label '${args.linkTitle}' exceeds Meta's 20 character limit (current: ${String(args.linkTitle).trim().length} chars).`);
-            }
-        }
-        else {
-            if (message.length > 1000) {
-                throw new Error(`Guardrail: Message length (${message.length} chars) exceeds Meta's 1000 character limit for direct messages.`);
-            }
-        }
+        const rawLinkTitle = args.linkTitle !== undefined ? String(args.linkTitle).trim() : undefined;
+        validateMetaResponseLimits(message, linkUrl, rawLinkTitle);
+        const linkTitle = (rawLinkTitle || 'Open Guide').slice(0, 20);
         const defaultPublicReplies = [
             'sent you a dm',
             'just sent. check your inbox',
@@ -194,6 +259,93 @@ export async function handleAutomationTools(name, args) {
             .single();
         if (error)
             throw new Error(`Failed to create automation: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({ success: true, automation: data }, null, 2)
+                }
+            ]
+        };
+    }
+    if (name === 'update_automation') {
+        const { data: existing, error: fetchError } = await supabase
+            .from('automations')
+            .select('*')
+            .eq('id', args.automationId)
+            .eq('user_id', user.id)
+            .single();
+        if (fetchError || !existing) {
+            throw new Error(`Automation not found: ${fetchError?.message || args.automationId}`);
+        }
+        const mergedContent = { ...(existing.response_content || {}) };
+        if (args.responseMessage !== undefined) {
+            mergedContent.message = String(args.responseMessage).trim();
+        }
+        if (args.linkUrl !== undefined) {
+            const trimmedUrl = args.linkUrl === null ? '' : String(args.linkUrl).trim();
+            if (!trimmedUrl) {
+                delete mergedContent.link_url;
+                delete mergedContent.link_title;
+            }
+            else {
+                mergedContent.link_url = trimmedUrl;
+                if (!mergedContent.link_title && args.linkTitle === undefined) {
+                    mergedContent.link_title = 'Open Guide';
+                }
+            }
+        }
+        if (args.linkTitle !== undefined) {
+            const trimmedTitle = String(args.linkTitle).trim();
+            if (trimmedTitle) {
+                mergedContent.link_title = trimmedTitle;
+            }
+            else {
+                delete mergedContent.link_title;
+            }
+        }
+        if (args.publicReplies !== undefined) {
+            if (!Array.isArray(args.publicReplies)) {
+                throw new Error('Guardrail: publicReplies must be an array of strings.');
+            }
+            mergedContent.public_replies = args.publicReplies;
+        }
+        if (args.checkFollow !== undefined) {
+            mergedContent.check_follow = Boolean(args.checkFollow);
+        }
+        if (args.replyMode !== undefined) {
+            mergedContent.reply_mode = args.replyMode;
+        }
+        validateMetaResponseLimits(String(mergedContent.message || ''), mergedContent.link_url, mergedContent.link_title);
+        const updatePayload = {
+            response_content: mergedContent,
+            updated_at: new Date().toISOString()
+        };
+        if (args.name !== undefined)
+            updatePayload.name = String(args.name).trim();
+        if (args.triggerSource !== undefined)
+            updatePayload.trigger_source = args.triggerSource;
+        if (args.triggerType !== undefined)
+            updatePayload.trigger_type = args.triggerType;
+        if (args.triggerValue !== undefined)
+            updatePayload.trigger_value = String(args.triggerValue).toLowerCase();
+        if (args.isActive !== undefined)
+            updatePayload.is_active = Boolean(args.isActive);
+        if (args.checkFollow !== undefined)
+            updatePayload.check_follow = Boolean(args.checkFollow);
+        if (args.specificMediaId !== undefined) {
+            const trimmedMedia = args.specificMediaId === null ? '' : String(args.specificMediaId).trim();
+            updatePayload.specific_media_id = trimmedMedia || null;
+        }
+        const { data, error } = await supabase
+            .from('automations')
+            .update(updatePayload)
+            .eq('id', args.automationId)
+            .eq('user_id', user.id)
+            .select('*')
+            .single();
+        if (error)
+            throw new Error(`Failed to update automation: ${error.message}`);
         return {
             content: [
                 {
